@@ -1,0 +1,9 @@
+node_modules/
+
+# compiled audio helper - build it with: npm run build:audio
+bin/
+
+*.log
+.DS_Store
+dist/
+out/

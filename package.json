@@ -1,0 +1,20 @@
+{
+  "name": "souffleur",
+  "version": "0.1.0",
+  "description": "A hidden prompter for calls: sees your screen, hears the room, invisible to screen share",
+  "main": "src/main/main.js",
+  "scripts": {
+    "test": "node --test 'test/*.test.js'",
+    "start": "electron .",
+    "dev": "electron . --enable-logging",
+    "debug": "SOUFFLEUR_DEBUG=1 electron .",
+    "build:audio": "swiftc -O src/native/AudioTap.swift -o bin/audiotap"
+  },
+  "keywords": [],
+  "author": "akshatgg",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^44.2.0"
+  }
+}

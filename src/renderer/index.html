@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:;">
+  <title>Souffleur</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <div class="status" id="status" data-state="hidden">
+      <span class="dot"></span>
+      <span class="status-text" id="statusText">Checking screen-share protection</span>
+      <div class="status-actions">
+        <button class="icon-btn" id="btnListen" title="Listen to the call (Shift+Z)" aria-pressed="false">◉</button>
+        <button class="icon-btn" id="btnClickThrough" title="Click-through (Cmd Shift \)" aria-pressed="false">◇</button>
+        <button class="icon-btn" id="btnSettings" title="Settings">⚙</button>
+        <button class="icon-btn" id="btnHide" title="Hide (Cmd Shift Space)">✕</button>
+      </div>
+    </div>
+
+    <div class="log" id="log">
+      <div class="empty" id="empty">
+        Ask anything, or press <kbd>⌘⇧⏎</kbd> to ask about what is on your screen.<br>
+        <kbd>⌘⇧Space</kbd> hides and shows this window.<br>
+        <kbd>⇧Z</kbd> listens to the call and transcribes what others say.
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="field">
+        <textarea id="input" rows="1" placeholder="Ask something" autofocus></textarea>
+        <button class="icon-btn" id="btnShot" title="Ask about my screen (Cmd Shift Return)">▣</button>
+      </div>
+      <div class="hints">
+        <span><kbd>⏎</kbd> send</span>
+        <span><kbd>⌘⇧⏎</kbd> ask about screen</span>
+        <span><kbd>⇧Z</kbd> listen</span>
+        <span><kbd>⌘⇧A</kbd> answer that</span>
+      </div>
+    </div>
+
+    <div class="settings" id="settings" hidden>
+      <div class="status">
+        <span class="status-text">Settings</span>
+        <div class="status-actions">
+          <button class="icon-btn" id="btnCloseSettings" title="Back">✕</button>
+        </div>
+      </div>
+      <div class="settings-body">
+        <div class="row">
+          <label>Provider</label>
+          <div class="seg" id="segProvider">
+            <button data-p="gemini" aria-pressed="false">Gemini</button>
+            <button data-p="openai" aria-pressed="false">OpenAI</button>
+            <button data-p="custom" aria-pressed="false">Other</button>
+          </div>
+        </div>
+
+        <div class="row" id="rowBaseUrl" hidden>
+          <label for="baseUrl">Base URL</label>
+          <input type="text" id="baseUrl" placeholder="https://api.groq.com/openai/v1" spellcheck="false">
+          <div class="note">Any OpenAI-compatible endpoint: Groq, Together, OpenRouter, Ollama, LM Studio, vLLM.</div>
+        </div>
+
+        <div class="row">
+          <label for="apiKey">API key</label>
+          <input type="password" id="apiKey" placeholder="Paste your key" spellcheck="false" autocomplete="off">
+          <div class="note" id="keyNote"></div>
+        </div>
+
+        <div class="row">
+          <label for="model">Model</label>
+          <div class="field-row">
+            <select id="model"></select>
+            <button class="icon-btn" id="btnModels" title="Reload the list from your provider">↻</button>
+          </div>
+          <input type="text" id="modelManual" placeholder="Type a model name" spellcheck="false" hidden>
+          <div class="note" id="modelNote"></div>
+        </div>
+
+        <div class="row">
+          <label for="listenHotkey">Listen shortcut</label>
+          <input type="text" id="listenHotkey" spellcheck="false" placeholder="Shift+Z">
+          <div class="note" id="hotkeyNote"></div>
+        </div>
+
+        <div class="row">
+          <label for="system">Instructions</label>
+          <textarea class="sys" id="system" spellcheck="false"></textarea>
+        </div>
+
+        <div class="row">
+          <span class="saved" id="saved"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
