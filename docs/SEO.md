@@ -33,7 +33,7 @@ The canonical host is **`https://getsouffleur.vercel.app`**. It appears in
 
 Five copies of one site is duplicate content, and it splits whatever ranking
 signal the site earns across hostnames that nobody links to on purpose.
-`web/vercel.json` now sends the other four to the canonical host with a 301.
+`web/vercel.json` now sends the other four to the canonical host with a permanent (308) redirect.
 
 If you add a custom domain later, **remove or repoint those redirect rules
 first** — they match on hostname, and a rule that catches your new domain would
@@ -144,7 +144,7 @@ the page says.
 
     curl -s https://getsouffleur.vercel.app/robots.txt
     curl -s https://getsouffleur.vercel.app/sitemap.xml
-    curl -sI https://souffleur-ai.vercel.app/ | grep -i '^location'   # expect the 301
+    curl -sI https://souffleur-ai.vercel.app/ | grep -i '^location'   # expect a 308 to the canonical host
 
 - [Rich Results Test](https://search.google.com/test/rich-results) — paste each URL
 - [Schema validator](https://validator.schema.org/)

@@ -5,7 +5,7 @@
 :root {
   --ink:        #eef1f6;
   --ink-dim:    #9aa4b4;
-  --ink-faint:  #626c7c;
+  --ink-faint:  #737d8d;   /* 4.58:1 on --ground; #626c7c was 3.59:1 */
   --ground:     #0d1016;
   --ground-2:   #12161e;
   --rule:       rgba(255, 255, 255, 0.08);
