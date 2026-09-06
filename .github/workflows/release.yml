@@ -37,8 +37,16 @@ jobs:
 
       - run: npm test
 
+      # Use the npm script, not a bare electron-builder call: the script passes
+      # --config, and without it the build silently falls back to defaults and
+      # writes to dist/ under a different product name.
       - name: Build DMGs
-        run: npx electron-builder --mac --publish never
+        run: npm run dist:mac
+
+      - name: Verify the DMGs exist
+        run: |
+          ls -lh release/*.dmg
+          test -n "$(ls release/*.dmg 2>/dev/null)" || { echo "no DMG produced"; exit 1; }
 
       - uses: actions/upload-artifact@v4
         with:
@@ -60,7 +68,13 @@ jobs:
       # No Swift on Windows, so no audio capture or PDF import there yet. The
       # app detects the missing helpers and says so rather than failing oddly.
       - name: Build installer
-        run: npx electron-builder --win --publish never
+        run: npm run dist:win
+
+      - name: Verify the installer exists
+        shell: bash
+        run: |
+          ls -lh release/*.exe
+          test -n "$(ls release/*.exe 2>/dev/null)" || { echo "no installer produced"; exit 1; }
 
       - uses: actions/upload-artifact@v4
         with:
@@ -75,12 +89,21 @@ jobs:
       - uses: actions/download-artifact@v4
         with: { path: artifacts }
 
+      # An empty release used to be reported only as a soft warning, so the job
+      # went green having uploaded nothing. Fail instead.
+      - name: Verify artifacts arrived
+        run: |
+          find artifacts -type f \( -name '*.dmg' -o -name '*.exe' \) -print
+          count=$(find artifacts -type f \( -name '*.dmg' -o -name '*.exe' \) | wc -l)
+          test "$count" -ge 3 || { echo "expected 3 installers, found $count"; exit 1; }
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/macos/*.dmg
-            artifacts/windows/*.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.exe
+          fail_on_unmatched_files: true
           generate_release_notes: true
           body: |
             ## Install
