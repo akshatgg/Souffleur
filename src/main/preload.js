@@ -16,6 +16,10 @@ contextBridge.exposeInMainWorld('souffleur', {
     ipcRenderer.invoke('chat:send', { messages, withScreenshot }),
   abort: () => ipcRenderer.invoke('chat:abort'),
 
+  listDocs: () => ipcRenderer.invoke('docs:list'),
+  addDocs: () => ipcRenderer.invoke('docs:add'),
+  removeDoc: (id) => ipcRenderer.invoke('docs:remove', id),
+
   hotkeyStatus: () => ipcRenderer.invoke('hotkey:check'),
   startListening: () => ipcRenderer.invoke('listen:start'),
   stopListening: () => ipcRenderer.invoke('listen:stop'),

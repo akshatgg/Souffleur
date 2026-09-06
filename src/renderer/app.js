@@ -255,7 +255,19 @@ function wireSettings() {
     $('settings').hidden = false;
     if (keyState[settings.provider] && !modelCache[settings.provider]) refreshModels();
   };
-  $('btnCloseSettings').onclick = () => { $('settings').hidden = true; inputEl.focus(); };
+  const closeSettings = () => {
+    $('settings').hidden = true;
+    inputEl.focus();
+  };
+  $('btnCloseSettings').onclick = closeSettings;
+
+  // Clicking Save blurs whatever field is focused first, so a value typed but
+  // not yet committed is saved by its own change handler before we close.
+  $('btnSave').onclick = () => {
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    flashSaved('Saved');
+    closeSettings();
+  };
 
   for (const b of document.querySelectorAll('#segProvider button')) {
     b.onclick = async () => {
@@ -279,11 +291,6 @@ function wireSettings() {
     paintProvider();
     flashSaved('Key saved');
     await refreshModels();
-
-    // Saving a key is the reason this panel exists. Once it is saved, close and
-    // hand focus to the composer -- never leave the chat covered.
-    $('settings').hidden = true;
-    inputEl.focus();
   });
 
   $('listenHotkey').addEventListener('change', async (e) => {
@@ -310,6 +317,79 @@ function wireSettings() {
   });
   $('baseUrl').addEventListener('change', (e) => patch({ baseUrl: e.target.value.trim() }));
   $('system').addEventListener('change', (e) => patch({ system: e.target.value }));
+}
+
+/* --------------------------- persona documents ---------------------------- */
+
+let docs = [];
+let maxDocs = 4;
+
+function paintDocs(suggestedName) {
+  const list = $('docList');
+  list.innerHTML = docs.map((d) => `
+    <div class="doc" data-id="${esc(d.id)}">
+      <span class="doc-name" title="${esc(d.name)}">${esc(d.name)}</span>
+      <span class="doc-meta">${d.pages}p &middot; ${Math.round((d.chars || 0) / 1000)}k</span>
+      <button title="Remove" data-remove="${esc(d.id)}">&times;</button>
+    </div>`).join('');
+
+  for (const b of list.querySelectorAll('[data-remove]')) {
+    b.onclick = async () => {
+      const res = await window.souffleur.removeDoc(b.dataset.remove);
+      docs = res.docs || [];
+      paintDocs();
+    };
+  }
+
+  const full = docs.length >= maxDocs;
+  $('btnAddDoc').disabled = full;
+  $('btnAddDoc').textContent = full ? `${maxDocs} of ${maxDocs} added` : 'Add PDF';
+
+  const note = $('docNote');
+  if (!note.classList.contains('warn')) {
+    note.textContent = docs.length
+      ? `${docs.length} of ${maxDocs}. Your CV, portfolio and anything describing your work.`
+      : `Up to ${maxDocs} PDFs. Interview mode answers from these, so add your CV first.`;
+  }
+  if (suggestedName && !$('personaName').value) $('personaName').placeholder = suggestedName;
+}
+
+function paintInterview() {
+  const on = Boolean(settings.interviewMode);
+  $('btnInterview').setAttribute('aria-pressed', String(on));
+  $('rowPersonaName').hidden = !on;
+}
+
+function wirePersona() {
+  $('btnInterview').onclick = async () => {
+    await patch({ interviewMode: !settings.interviewMode });
+    paintInterview();
+    const note = $('docNote');
+    if (settings.interviewMode && !docs.length) {
+      note.className = 'note warn';
+      note.textContent = 'Add at least one PDF, or interview mode has no history to answer from.';
+    } else {
+      note.className = 'note';
+      paintDocs();
+    }
+  };
+
+  $('personaName').addEventListener('change', (e) => patch({ personaName: e.target.value.trim() }));
+
+  $('btnAddDoc').onclick = async () => {
+    const note = $('docNote');
+    note.className = 'note';
+    note.textContent = 'Reading\u2026';
+    const res = await window.souffleur.addDocs();
+    docs = res.docs || docs;
+    if (res.error) {
+      note.className = 'note warn';
+      note.textContent = res.error;
+    } else {
+      note.className = 'note';
+    }
+    paintDocs(res.suggestedName);
+  };
 }
 
 /**
@@ -531,7 +611,14 @@ window.souffleur.onClickThroughChanged((v) => {
     $('keyNote').after(n);
   }
 
+  docs = b.docs || [];
+  maxDocs = b.maxDocs || 4;
+  $('personaName').value = settings.personaName || '';
+  paintInterview();
+  paintDocs(b.suggestedName);
+
   wireSettings();
+  wirePersona();
   wireInput();
   autoGrow();
 

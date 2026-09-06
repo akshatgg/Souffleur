@@ -81,6 +81,31 @@
         </div>
 
         <div class="row">
+          <label>Who you are</label>
+          <div class="toggle-row">
+            <button class="toggle" id="btnInterview" aria-pressed="false" role="switch">
+              <span class="knob"></span>
+            </button>
+            <div class="toggle-label">
+              <div>Interview mode</div>
+              <div class="note">Answer in first person as yourself, using the documents below.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" id="rowPersonaName" hidden>
+          <label for="personaName">Your name</label>
+          <input type="text" id="personaName" spellcheck="false" placeholder="Taken from your CV">
+        </div>
+
+        <div class="row">
+          <label>Documents about you</label>
+          <div class="docs" id="docList"></div>
+          <button class="add-doc" id="btnAddDoc">Add PDF</button>
+          <div class="note" id="docNote"></div>
+        </div>
+
+        <div class="row">
           <label for="listenHotkey">Listen shortcut</label>
           <input type="text" id="listenHotkey" spellcheck="false" placeholder="Shift+Z">
           <div class="note" id="hotkeyNote"></div>
@@ -91,9 +116,10 @@
           <textarea class="sys" id="system" spellcheck="false"></textarea>
         </div>
 
-        <div class="row">
-          <span class="saved" id="saved"></span>
-        </div>
+      </div>
+      <div class="settings-foot">
+        <span class="saved" id="saved"></span>
+        <button class="primary" id="btnSave">Save</button>
       </div>
     </div>
   </div>

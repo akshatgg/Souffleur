@@ -8,7 +8,8 @@
     "start": "electron .",
     "dev": "electron . --enable-logging",
     "debug": "SOUFFLEUR_DEBUG=1 electron .",
-    "build:audio": "swiftc -O src/native/AudioTap.swift -o bin/audiotap"
+    "build:audio": "swiftc -O src/native/AudioTap.swift -o bin/audiotap",
+    "build:native": "swiftc -O src/native/AudioTap.swift -o bin/audiotap && swiftc -O src/native/PdfText.swift -o bin/pdftext"
   },
   "keywords": [],
   "author": "akshatgg",

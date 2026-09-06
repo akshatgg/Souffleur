@@ -19,6 +19,8 @@ const DEFAULTS = {
     'You are a terse, high-signal assistant running in a small always-on-top overlay. ' +
     'Answer directly, lead with the answer, skip preamble. Use short code blocks when code helps. ' +
     'The user cannot see a long response without scrolling, so be brief unless asked to expand.',
+  interviewMode: false,  // answer in first person as the person in the documents
+  personaName: '',       // blank = inferred from the first document
   listenHotkey: 'Shift+Z',  // global: fires in every app, so beware bare letters
   transcribeModel: '',   // blank = pick automatically from the model list
   autoListen: false,     // start listening as soon as the app launches

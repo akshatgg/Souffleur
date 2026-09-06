@@ -1,11 +1,12 @@
 'use strict';
 const { app, BrowserWindow, globalShortcut, ipcMain, screen, shell,
-        systemPreferences, desktopCapturer } = require('electron');
+        systemPreferences, desktopCapturer, dialog } = require('electron');
 const path = require('path');
 
 const { applyStealth, hideFromDock, setClickThrough, stealthStatus } = require('./stealth');
 const { streamChat, listModels, transcribe, defaultTranscribeModel, PRESETS } = require('./providers');
 const { Listener } = require('./listen');
+const persona = require('./persona');
 const store = require('./store');
 const { captureScreen } = require('./capture');
 
@@ -56,6 +57,29 @@ function createWindow() {
   win.on('moved', persist);
   win.on('resized', persist);
   win.on('closed', () => { win = null; });
+
+  // Clipboard shortcuts, wired by hand.
+  //
+  // app.dock.hide() puts the app in accessory mode, which means no menu bar --
+  // and on macOS the standard Cmd+C/V/X/A accelerators are delivered *by the
+  // Edit menu*. With no menu there is no paste, which makes the API key field
+  // impossible to fill without retyping the key by hand. Handling the input
+  // directly works whether or not a menu exists.
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown') return;
+    if (!(input.meta || input.control)) return;
+
+    const wc = win.webContents;
+    switch (input.key.toLowerCase()) {
+      case 'v': wc.paste(); break;
+      case 'c': wc.copy(); break;
+      case 'x': wc.cut(); break;
+      case 'a': wc.selectAll(); break;
+      case 'z': input.shift ? wc.redo() : wc.undo(); break;
+      default: return;                       // leave every other combo alone
+    }
+    event.preventDefault();
+  });
 
   // External links open in the real browser, never inside the overlay.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -173,6 +197,20 @@ function ensureListener() {
   return listener;
 }
 
+/**
+ * Interview mode answers *as* the person described by the uploaded documents.
+ * It falls back to the plain assistant prompt when no document has been added,
+ * so turning the toggle on before uploading anything cannot produce a persona
+ * with no history to stand on.
+ */
+function systemPrompt(s) {
+  if (s.interviewMode) {
+    const p = persona.interviewPrompt(s.personaName);
+    if (p) return p;
+  }
+  return s.system;
+}
+
 /** Recent speech, folded into the system prompt so answers have context. */
 function transcriptContext() {
   if (!transcript.length) return '';
@@ -189,6 +227,9 @@ ipcMain.handle('bootstrap', () => ({
   presets: PRESETS,
   keys: store.keyPresence(),
   keyStatuses: store.keyStatuses(),
+  docs: persona.list(),
+  maxDocs: persona.MAX_DOCS,
+  suggestedName: persona.guessName(),
   keyStorage: store.keyStorageMode(),
   stealth: stealthStatus(),
   platform: process.platform,
@@ -237,6 +278,36 @@ function screenPermission() {
   if (process.platform !== 'darwin') return 'granted';
   try { return systemPreferences.getMediaAccessStatus('screen'); } catch { return 'unknown'; }
 }
+
+/* ---------------------------- persona documents ---------------------------- */
+
+ipcMain.handle('docs:list', () => ({
+  docs: persona.list(),
+  max: persona.MAX_DOCS,
+  suggestedName: persona.guessName(),
+}));
+
+ipcMain.handle('docs:add', async () => {
+  const res = await dialog.showOpenDialog(win, {
+    title: 'Add a document about you',
+    buttonLabel: 'Add',
+    properties: ['openFile', 'multiSelections'],
+    filters: [{ name: 'PDF', extensions: ['pdf'] }],
+  });
+  if (res.canceled || !res.filePaths.length) return { ok: true, docs: persona.list() };
+
+  const errors = [];
+  for (const f of res.filePaths) {
+    const r = await persona.add(f);
+    if (!r.ok) errors.push(`${require('path').basename(f)}: ${r.error}`);
+  }
+  return { ok: !errors.length, error: errors.join('\n'), docs: persona.list(),
+           suggestedName: persona.guessName() };
+});
+
+ipcMain.handle('docs:remove', (_e, id) => persona.remove(id));
+
+/* -------------------------------- listening -------------------------------- */
 
 ipcMain.handle('listen:start', async () => {
   const status = screenPermission();
@@ -321,7 +392,7 @@ ipcMain.handle('chat:send', async (event, { messages, withScreenshot }) => {
       apiKey,
       model: s.model,
       baseUrl: s.baseUrl,
-      system: s.system + transcriptContext(),
+      system: systemPrompt(s) + transcriptContext(),
       messages,
       image,
       signal: ctrl.signal,
