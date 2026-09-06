@@ -18,7 +18,8 @@
     "release:major": "npm version major && git push --follow-tags",
     "cask:update": "node packaging/update-cask.mjs",
     "lint": "eslint .",
-    "site:update": "node packaging/update-site.mjs"
+    "site:update": "node packaging/update-site.mjs",
+    "site:og": "node packaging/build-og.mjs"
   },
   "keywords": [],
   "author": "akshatgg",

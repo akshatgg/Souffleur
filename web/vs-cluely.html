@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Souffleur vs Cluely — Free, Open-Source Cluely Alternative</title>
+<meta name="description" content="Cluely puts screen-share invisibility in a $149.99/month plan. Souffleur is free, open source, and publishes the capture test behind its claim.">
+<link rel="canonical" href="https://getsouffleur.vercel.app/vs-cluely">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="author" content="akshatgg">
+<meta name="theme-color" content="#0d1016">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Souffleur">
+<meta property="og:url" content="https://getsouffleur.vercel.app/vs-cluely">
+<meta property="og:title" content="Souffleur vs Cluely — a free, open-source alternative">
+<meta property="og:description" content="Cluely puts screen-share invisibility in a $149.99/month plan. Souffleur is free and open source, and publishes the capture test behind the claim.">
+<meta property="og:image" content="https://getsouffleur.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The same screen twice: yours with the Souffleur overlay, and the screen share with nothing there.">
+<meta property="og:locale" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Souffleur vs Cluely — a free, open-source alternative">
+<meta name="twitter:description" content="One is $149.99/month for invisibility. The other is free, open source, and shows its test data.">
+<meta name="twitter:image" content="https://getsouffleur.vercel.app/og.png">
+
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Souffleur", "item": "https://getsouffleur.vercel.app/" },
+    { "@type": "ListItem", "position": 2, "name": "Souffleur vs Cluely", "item": "https://getsouffleur.vercel.app/vs-cluely" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the best free alternative to Cluely?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Souffleur is a free, open-source desktop app that does the same core job: an overlay that reads your screen, transcribes the other side of a call, and stays out of the screen share. It is free because you connect your own Gemini or OpenAI API key and pay the provider directly, so there is no subscription and no account. Other open-source options in the same category include OpenCluely and Pluely."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does Cluely cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "As listed on cluely.com/pricing in September 2026: a free Starter plan with limited AI responses, Pro at 19.99 US dollars a month, and Pro + Undetectability at 149.99 US dollars a month. Screen-share invisibility is only included in the 149.99 dollar plan."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Souffleur open source?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The full source is on GitHub, including the Swift code that hides the window from screen capture and the test harness used to verify it. You can read exactly what it sends and where, and build it yourself."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is Cluely the better choice?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "If you want mobile apps, saved meeting notes and transcripts across a workspace, a signed and notarised installer, a support team to email, and a product that works without you creating an API key, Cluely is the better fit. Souffleur is a single desktop overlay with no account, no mobile app and no support contract."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 22" aria-hidden="true">
+      <line class="mark-stage" x1="1" y1="18" x2="31" y2="18"/>
+      <ellipse class="mark-dome" cx="16" cy="10" rx="10" ry="8"/>
+      <rect class="mark-slot" x="12.2" y="13.2" width="7.6" height="3.2" rx="1.6"/>
+    </svg> Souffleur</a>
+  <div class="nav-links">
+    <a href="/vs-cluely">vs Cluely</a>
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/akshatgg/Souffleur">Source</a>
+    <a class="nav-cta" href="/#download">Download</a>
+  </div>
+</nav>
+
+<main class="docs">
+
+<nav class="crumbs" aria-label="Breadcrumb">
+  <a href="/">Souffleur</a> <span aria-hidden="true">/</span> <span>vs Cluely</span>
+</nav>
+
+<h1>Souffleur vs Cluely</h1>
+<p class="lede">
+  Both put an AI assistant on top of your screen that the people watching your
+  screen share cannot see. One charges $149.99 a month for the part that makes
+  it work. The other is free and shows you its test data.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>The short version.</strong> Cluely is a funded product with mobile
+    apps, meeting notes, a support team and a signed installer, and it keeps
+    screen-share invisibility in its most expensive tier. Souffleur is a free,
+    open-source desktop overlay that does the invisibility, the screen reading
+    and the call transcription, costs nothing, and publishes the capture test
+    behind its claim. If you want a polished suite, pay for Cluely. If you want
+    the overlay and want to verify it, take Souffleur.
+  </p>
+</div>
+
+<h2>Side by side</h2>
+
+<div class="cmp-wrap">
+<table class="cmp">
+  <thead>
+    <tr><th>&nbsp;</th><th>Souffleur</th><th>Cluely</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Price</td>
+      <td class="yes">Free, forever</td>
+      <td>Free tier, Pro $19.99/mo, Pro&nbsp;+&nbsp;Undetectability $149.99/mo</td>
+    </tr>
+    <tr>
+      <td>Hidden from screen share</td>
+      <td class="yes">Included</td>
+      <td>Only on the $149.99/mo plan</td>
+    </tr>
+    <tr>
+      <td>Invisibility test published</td>
+      <td class="yes">Yes — 151 frames, with a control</td>
+      <td>Not published</td>
+    </tr>
+    <tr>
+      <td>Open source</td>
+      <td class="yes">Yes, whole app</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Account required</td>
+      <td class="yes">None</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Where your screen goes</td>
+      <td class="yes">Straight to your own provider</td>
+      <td>Through Cluely's service</td>
+    </tr>
+    <tr>
+      <td>AI model</td>
+      <td>Any Gemini, OpenAI or OpenAI-compatible model, your key</td>
+      <td>Chosen for you, included in the price</td>
+    </tr>
+    <tr>
+      <td>Reads your screen</td>
+      <td class="yes">Yes</td>
+      <td class="yes">Yes</td>
+    </tr>
+    <tr>
+      <td>Transcribes the call</td>
+      <td class="yes">Yes, into the chat box</td>
+      <td class="yes">Yes</td>
+    </tr>
+    <tr>
+      <td>Answers from your CV</td>
+      <td class="yes">Yes, up to 4 PDFs</td>
+      <td class="yes">Yes, file uploads</td>
+    </tr>
+    <tr>
+      <td>Desktop</td>
+      <td class="yes">macOS and Windows</td>
+      <td class="yes">macOS and Windows</td>
+    </tr>
+    <tr>
+      <td>Mobile</td>
+      <td class="no">No</td>
+      <td class="yes">iOS and Android</td>
+    </tr>
+    <tr>
+      <td>Saved meeting notes</td>
+      <td class="no">No</td>
+      <td class="yes">Yes</td>
+    </tr>
+    <tr>
+      <td>Signed and notarised installer</td>
+      <td class="no">No — Homebrew works around it</td>
+      <td class="yes">Yes</td>
+    </tr>
+    <tr>
+      <td>Support</td>
+      <td>GitHub issues</td>
+      <td class="yes">Priority support on paid plans</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="fine">
+  Cluely details from <a href="https://cluely.com/pricing" target="_blank" rel="noreferrer nofollow">cluely.com/pricing</a>,
+  read in September 2026. Prices change — check before you buy.
+</p>
+
+<h2>What you actually pay</h2>
+<p>
+  Cluely's invisibility sits in the <strong>Pro&nbsp;+&nbsp;Undetectability</strong>
+  plan at <strong>$149.99 a month</strong>. The $19.99 Pro plan gives you the
+  assistant, but the overlay is visible to screen-sharing software — which, for
+  the case most people are buying it for, is the whole feature.
+</p>
+<p>
+  Souffleur costs nothing and has no plan to be in. What you pay instead is your
+  own API bill: you paste a Gemini or OpenAI key and the provider charges you for
+  the tokens you use. A screenshot plus a few hundred words of answer is a
+  fraction of a cent on current flash-tier models, and Gemini's free tier covers
+  a lot of interviews on its own. There is no tier where the invisibility is
+  switched off, because it is the reason the app exists.
+</p>
+
+<h2>“Invisible” is a claim. Ask who tested it</h2>
+<p>
+  Every tool in this category says it is invisible. Apple's own developer forums
+  have an Apple engineer stating there is <em>no public API for preventing screen
+  capture</em>, and the flag these apps depend on has been reported broken across
+  macOS releases. That makes the claim worth checking rather than believing.
+</p>
+<p>
+  So Souffleur was measured. Three windows were placed on screen — one with
+  content protection on, one excluded through a ScreenCaptureKit content filter,
+  and one <strong>unprotected control</strong> — then captured through a live
+  30&nbsp;fps <code>SCStream</code>, the same path Zoom, Google Meet, Teams and
+  OBS use.
+</p>
+<table>
+  <tr><th>Window</th><th>Frames it appeared in</th></tr>
+  <tr><td>Control, unprotected</td><td>151 of 151 — 100%</td></tr>
+  <tr><td><code>sharingType = .none</code></td><td>0 of 151</td></tr>
+  <tr><td><code>excludingWindows</code> filter</td><td>0 of 151</td></tr>
+</table>
+<p>
+  The control is the part that matters. Without a window that <em>should</em>
+  have been captured, “nothing appeared” proves only that the test was broken.
+  <a href="https://github.com/akshatgg/Souffleur/blob/master/docs/VERIFICATION.md">The full method, the raw counts and the caveats are published</a>,
+  and the harness is in the repository so you can run it on your own machine.
+</p>
+<p>
+  Cluely has not published an equivalent test. That is not an accusation that it
+  does not work — it is the reason one of these two claims can be checked and the
+  other has to be trusted.
+</p>
+
+<h2>Where Cluely is the better choice</h2>
+<p>
+  Worth saying plainly, because the comparison is useless if it only runs one way:
+</p>
+<ul>
+  <li><strong>You want it on your phone.</strong> Cluely has iOS and Android apps. Souffleur is desktop only.</li>
+  <li><strong>You want meeting notes that persist.</strong> Cluely records, summarises and keeps transcripts across meetings. Souffleur transcribes into the chat box and forgets.</li>
+  <li><strong>You do not want to handle an API key.</strong> Cluely includes the model in the price. Souffleur asks you to create a key, which takes a few minutes and a payment method at the provider.</li>
+  <li><strong>You want an installer that just opens.</strong> Cluely is signed and notarised. Souffleur is not, so macOS installs go through Homebrew and Windows shows SmartScreen once.</li>
+  <li><strong>You want someone to email.</strong> Cluely has support staff. Souffleur has an issue tracker and one maintainer.</li>
+</ul>
+
+<h2>Where Souffleur is the better choice</h2>
+<ul>
+  <li><strong>Invisibility is the feature you came for.</strong> It is included, not a $149.99 upgrade.</li>
+  <li><strong>You want to read the code.</strong> The Swift that hides the window, the capture pipeline and the prompts are all in the repository.</li>
+  <li><strong>You do not want your screen crossing someone else's server.</strong> Requests go from your machine to your provider. There is no service in the middle, because there is nothing to run one on.</li>
+  <li><strong>You want to pick the model.</strong> Any Gemini or OpenAI model, or any OpenAI-compatible endpoint — including a local one.</li>
+  <li><strong>You want to verify rather than trust.</strong> The test harness ships with the app.</li>
+</ul>
+
+<h2>Other open-source options</h2>
+<p>
+  Souffleur is not the only free alternative, and it would be dishonest to
+  pretend otherwise.
+  <a href="https://github.com/TechyCSR/OpenCluely" target="_blank" rel="noreferrer nofollow">OpenCluely</a>
+  is aimed squarely at DSA and coding-round interviews,
+  <a href="https://github.com/iamsrikanthnani/pluely" target="_blank" rel="noreferrer nofollow">Pluely</a>
+  is a very small Tauri build, and
+  <a href="https://github.com/Natively-AI-assistant/natively-cluely-ai-assistant" target="_blank" rel="noreferrer nofollow">Natively</a>
+  leans towards meeting notes and local RAG. What Souffleur adds to that list is
+  the published verification, first-person interview mode driven by your own CV,
+  and the same feature set on Windows as on macOS.
+</p>
+
+<h2>Switching takes about two minutes</h2>
+<p>On macOS:</p>
+<pre><code>brew install --cask akshatgg/tap/souffleur</code></pre>
+<p>
+  On Windows, take the <code>.exe</code> from the
+  <a href="/#download">download section</a>. Then paste an API key, and press
+  <kbd>Shift</kbd>&nbsp;+&nbsp;<kbd>Space</kbd> to show and hide the overlay.
+  <a href="/docs">The docs</a> cover providers, shortcuts, call transcription
+  and interview mode.
+</p>
+
+<h2>What neither of them does</h2>
+<p>
+  Hiding a window from screen capture is not the same as being undetectable. A
+  camera pointed at your screen, a second machine recording the room, a
+  proctoring agent with kernel-level access, or your eyes visibly tracking text
+  will all still show something. Both tools exclude a window from a capture
+  stream. That is the claim, and it is worth knowing where it stops.
+</p>
+<p class="fine">
+  Check the rules that apply to you before using either of these in an interview
+  or an exam.
+</p>
+
+<p style="margin-top:34px">
+  <a class="btn btn-primary" href="/#download">Download Souffleur — free</a>
+  <a class="btn" href="/docs">Read the docs</a>
+</p>
+
+</main>
+
+<footer class="foot">
+  <span>Souffleur</span>
+  <span class="foot-links">
+    <a href="/">Home</a>
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/akshatgg/Souffleur">GitHub</a>
+    <a href="https://github.com/akshatgg/Souffleur/releases">Releases</a>
+  </span>
+  <span class="fine">Cluely is a trademark of its owner. This page is an independent comparison and is not affiliated with or endorsed by Cluely.</span>
+</footer>
+
+</body>
+</html>

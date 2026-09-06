@@ -622,3 +622,90 @@ td:first-child { white-space: nowrap; width: 1%; padding-right: 22px; }
   .screen, .overlay { animation: none; }
   .rig { transition: none; }
 }
+
+/* --------------------------------- SEO pages ------------------------------ */
+
+/* Breadcrumbs. Small, quiet, and matched by BreadcrumbList structured data —
+   Google wants the trail it renders in a result to exist on the page too. */
+.crumbs {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-bottom: 18px;
+  display: flex;
+  gap: 8px;
+}
+.crumbs a { color: var(--ink-dim); text-decoration: none; }
+.crumbs a:hover { color: var(--gold); }
+
+.inline-link { color: var(--ink-dim); text-decoration: none; white-space: nowrap; }
+.inline-link:hover { color: var(--gold); }
+
+/* The features grid gained a heading, so the section has a real hierarchy
+   instead of four orphaned h3s. It spans the grid rather than joining it. */
+.section-h {
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
+}
+
+/* ------------------------------------ FAQ --------------------------------- */
+
+.faq {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 84px 32px;
+  border-top: 1px solid var(--rule);
+}
+.faq h2 { margin-bottom: 26px; }
+
+.qa {
+  border-bottom: 1px solid var(--rule);
+}
+.qa summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 17px 34px 17px 0;
+  font-size: 16.5px;
+  font-weight: 500;
+  position: relative;
+}
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::after {
+  content: '+';
+  position: absolute;
+  right: 4px;
+  top: 15px;
+  font-size: 19px;
+  color: var(--ink-faint);
+  transition: transform 160ms ease, color 160ms ease;
+}
+.qa[open] summary::after { transform: rotate(45deg); color: var(--gold); }
+.qa summary:hover { color: var(--gold); }
+.qa p {
+  color: var(--ink-dim);
+  font-size: 15px;
+  max-width: 78ch;
+  padding: 0 34px 20px 0;
+}
+.qa a { color: var(--gold); text-decoration: none; }
+.qa a:hover { text-decoration: underline; }
+
+/* ------------------------------- comparison ------------------------------- */
+
+/* Wide on purpose: three columns of prose do not fold well, so on a narrow
+   screen the table scrolls sideways inside its own box rather than forcing
+   the page to. */
+.cmp-wrap { overflow-x: auto; margin-bottom: 8px; }
+.cmp { min-width: 660px; }
+.cmp th { padding-right: 22px; }
+.cmp th:nth-child(2) { color: var(--gold); font-size: 13px; }
+.cmp th:nth-child(3) { color: var(--ink-dim); font-size: 13px; }
+.cmp td { width: auto; white-space: normal; }
+.cmp td:first-child { color: var(--ink); width: 22%; min-width: 165px; padding-right: 26px; }
+.cmp td:nth-child(2), .cmp td:nth-child(3) { width: 34%; }
+.cmp td.yes { color: var(--ink); }
+.cmp td.yes::before { content: '✓ '; color: var(--gold); }
+.cmp td.no::before  { content: '✕ '; color: var(--ink-faint); }
+
+@media (max-width: 620px) {
+  .faq { padding: 60px 22px; }
+}

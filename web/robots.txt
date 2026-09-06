@@ -1,0 +1,31 @@
+# https://getsouffleur.vercel.app
+# Everything here is public documentation for a free, open-source app.
+
+User-agent: *
+Allow: /
+
+# Assistants that answer questions by reading the web are a real way people
+# find software now, and this site is the only place the invisibility test
+# results are written up. Let them in explicitly rather than by default.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+Sitemap: https://getsouffleur.vercel.app/sitemap.xml

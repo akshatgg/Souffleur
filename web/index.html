@@ -3,16 +3,154 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Souffleur — the prompter they can't see</title>
-<meta name="description" content="A desktop assistant that reads your screen and hears your calls, while staying out of the screen share. Bring your own API key.">
-<meta property="og:title" content="Souffleur">
-<meta property="og:description" content="The prompter they can't see. A desktop assistant that stays out of the screen share.">
+
+<title>Souffleur — Invisible AI Assistant, Hidden From Screen Share</title>
+<meta name="description" content="A free, open-source AI overlay that reads your screen and hears your call, and stays invisible to Zoom, Meet and Teams screen sharing. Bring your own key.">
+<link rel="canonical" href="https://getsouffleur.vercel.app/">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="author" content="akshatgg">
+<meta name="theme-color" content="#0d1016">
+
 <meta property="og:type" content="website">
-<link rel="icon" href="/icon.png">
+<meta property="og:site_name" content="Souffleur">
+<meta property="og:url" content="https://getsouffleur.vercel.app/">
+<meta property="og:title" content="Souffleur — the invisible AI assistant for screen shares">
+<meta property="og:description" content="A free, open-source AI overlay that reads your screen and hears your call, and stays out of the screen share. Hidden in all 151 frames of a live capture test.">
+<meta property="og:image" content="https://getsouffleur.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The same screen twice: yours with the Souffleur overlay answering a question, and the screen share with nothing there.">
+<meta property="og:locale" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Souffleur — the invisible AI assistant for screen shares">
+<meta name="twitter:description" content="Free and open source. Reads your screen, hears your call, and never appears in the stream everyone else is watching.">
+<meta name="twitter:image" content="https://getsouffleur.vercel.app/og.png">
+<meta name="twitter:image:alt" content="The same screen twice: yours with the Souffleur overlay, and the screen share with nothing there.">
+
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://getsouffleur.vercel.app/#website",
+      "url": "https://getsouffleur.vercel.app/",
+      "name": "Souffleur",
+      "description": "A free, open-source AI overlay that stays out of the screen share.",
+      "inLanguage": "en",
+      "publisher": { "@id": "https://getsouffleur.vercel.app/#author" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://getsouffleur.vercel.app/#author",
+      "name": "akshatgg",
+      "url": "https://github.com/akshatgg"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://getsouffleur.vercel.app/#app",
+      "name": "Souffleur",
+      "alternateName": "Souffleur invisible AI assistant",
+      "url": "https://getsouffleur.vercel.app/",
+      "description": "A desktop AI assistant that reads your screen and transcribes your call from an overlay window that is excluded from screen sharing and screen recording.",
+      "applicationCategory": "UtilitiesApplication",
+      "applicationSubCategory": "AI assistant",
+      "operatingSystem": "macOS 13 Ventura or later, Windows 10, Windows 11",
+      "softwareVersion": "0.1.4",
+      "downloadUrl": "https://github.com/akshatgg/Souffleur/releases/latest",
+      "installUrl": "https://getsouffleur.vercel.app/#download",
+      "softwareHelp": "https://getsouffleur.vercel.app/docs",
+      "license": "https://github.com/akshatgg/Souffleur/blob/master/LICENSE",
+      "isAccessibleForFree": true,
+      "author": { "@id": "https://getsouffleur.vercel.app/#author" },
+      "image": "https://getsouffleur.vercel.app/og.png",
+      "screenshot": "https://getsouffleur.vercel.app/og.png",
+      "featureList": [
+        "Overlay window hidden from Zoom, Google Meet, Teams and OBS screen sharing",
+        "Screen capture sent to a vision model with one keystroke",
+        "System audio transcribed into the chat box as the other person speaks",
+        "Interview mode that answers in the first person from your own CV",
+        "Bring your own Gemini, OpenAI or OpenAI-compatible API key",
+        "Keys encrypted in the system keychain, with no server in between"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is Souffleur really invisible during a screen share?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It was measured rather than assumed. Three windows — one protected, one excluded by capture filter, and one unprotected control — were captured through a live 30 fps ScreenCaptureKit stream, the same path Zoom, Google Meet, Teams and OBS use. The control appeared in 100% of frames. Both protected windows appeared in none of the 151 frames. The control is what makes the result mean anything."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Souffleur free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The app is free and open source, with no account and no subscription. You pay your AI provider directly for the tokens you use, because you connect your own Gemini or OpenAI API key."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Souffleur a free alternative to Cluely?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It does the same job. Cluely puts screen-share invisibility in its Pro + Undetectability plan at 149.99 US dollars a month; Souffleur is free, open source, and publishes the capture test behind its invisibility claim so you can check it instead of trusting it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Souffleur work on Windows as well as macOS?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, and with the same features on both. Call audio is captured through ScreenCaptureKit on macOS and through Chromium's loopback support on Windows; the overlay, screen capture, chat and interview mode are shared code. macOS installs through Homebrew, Windows through a .exe installer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can an interviewer detect it some other way?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Hiding a window from screen capture is not the same as being undetectable. A camera pointed at your screen, a second machine recording the room, a proctoring agent with kernel-level access, or simply your eyes moving to read will all still show something. The window is excluded from the capture stream, and that is the whole of the claim."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Souffleur send my screen or my API key to your servers?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "There are no servers. Requests go from your machine straight to the provider whose key you entered, and the key itself is encrypted by the operating system keychain. Nothing is collected, and there is no account to create."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -26,6 +164,7 @@
     Souffleur
   </a>
   <div class="nav-links">
+    <a href="/vs-cluely">vs Cluely</a>
     <a href="/docs">Docs</a>
     <a href="https://github.com/akshatgg/Souffleur">Source</a>
     <a class="nav-cta" href="#download">Download</a>
@@ -36,15 +175,19 @@
   <div class="hero-copy">
     <h1>The prompter <em>they can't see</em></h1>
     <p class="lede">
-      A small window that reads your screen and listens to your call, sitting on
-      top of everything you do — and absent from the stream everyone else is
+      Souffleur is a free, open-source AI assistant that reads your screen and
+      listens to your call from a small window sitting on top of everything you
+      do — and absent from the Zoom, Meet or Teams screen share everyone else is
       watching.
     </p>
     <div class="cta-row">
       <a class="btn btn-primary" href="#download" data-os-label>Download for macOS</a>
       <a class="btn" href="/docs">Read the docs</a>
     </div>
-    <p class="fine">Free and open source. Your own API key. No account, no server.</p>
+    <p class="fine">
+      Free and open source. Your own API key. No account, no server.
+      <a href="/vs-cluely" class="inline-link">See how it compares to Cluely →</a>
+    </p>
   </div>
 
   <!-- The hero is the product claim, demonstrated: one screen, two views. -->
@@ -90,7 +233,7 @@
   </div>
 </header>
 
-<section class="proof">
+<section class="proof" id="proof">
   <div class="proof-copy">
     <h2>Measured, not claimed</h2>
     <p>
@@ -130,7 +273,8 @@
   </div>
 </section>
 
-<section class="features">
+<section class="features" id="features" aria-labelledby="features-h">
+  <h2 id="features-h" class="section-h">What it does</h2>
   <article>
     <h3>Sees your screen</h3>
     <p>
@@ -142,15 +286,17 @@
   <article>
     <h3>Hears the call</h3>
     <p>
-      System audio is transcribed as people speak and dropped straight into the
-      chat box, so answering is one keystroke. Split at pauses, never mid-word.
+      System audio — the other person's voice, not yours — is transcribed as
+      they speak and dropped straight into the chat box, so answering is one
+      keystroke. Split at pauses, never mid-word.
     </p>
   </article>
   <article>
     <h3>Answers as you</h3>
     <p>
-      Add your CV and it answers in the first person from your real history —
-      and is told not to invent employers, dates or numbers that aren't in it.
+      Add your CV and interview mode answers in the first person from your real
+      history — and is told not to invent employers, dates or numbers that
+      aren't in it.
     </p>
   </article>
   <article>
@@ -244,9 +390,79 @@
   </div>
 </section>
 
+<section class="faq" id="faq" aria-labelledby="faq-h">
+  <h2 id="faq-h">Questions people actually ask</h2>
+
+  <details class="qa">
+    <summary>Is Souffleur really invisible during a screen share?</summary>
+    <p>
+      It was measured rather than assumed. Three windows — one protected, one
+      excluded by capture filter, one unprotected control — were captured
+      through a live 30&nbsp;fps ScreenCaptureKit stream, the same path Zoom,
+      Google Meet, Teams and OBS use. The control appeared in 100% of frames.
+      Both protected windows appeared in none of the 151. The control is what
+      makes the result mean anything —
+      <a href="https://github.com/akshatgg/Souffleur/blob/master/docs/VERIFICATION.md">the method is written up in full</a>.
+    </p>
+  </details>
+
+  <details class="qa">
+    <summary>Is it free?</summary>
+    <p>
+      Yes. Free and open source, no account and no subscription. You pay your AI
+      provider directly for the tokens you use, because you connect your own
+      Gemini or OpenAI key — for most people that is cents per interview rather
+      than a monthly bill.
+    </p>
+  </details>
+
+  <details class="qa">
+    <summary>Is this a free alternative to Cluely?</summary>
+    <p>
+      It does the same job. Cluely puts screen-share invisibility in its
+      <em>Pro&nbsp;+&nbsp;Undetectability</em> plan at $149.99 a month;
+      Souffleur is free, open source, and publishes the capture test behind its
+      invisibility claim so you can check it instead of trusting it.
+      <a href="/vs-cluely">The full comparison is here</a>.
+    </p>
+  </details>
+
+  <details class="qa">
+    <summary>Does it work on Windows as well as macOS?</summary>
+    <p>
+      Yes, with the same features on both. Call audio is captured through
+      ScreenCaptureKit on macOS and Chromium's loopback support on Windows; the
+      overlay, screen capture, chat and interview mode are shared code. macOS
+      installs through Homebrew, Windows through a <code>.exe</code> installer.
+    </p>
+  </details>
+
+  <details class="qa">
+    <summary>Can an interviewer detect it some other way?</summary>
+    <p>
+      Yes. Hiding a window from screen capture is not the same as being
+      undetectable. A camera pointed at your screen, a second machine recording
+      the room, a proctoring agent with kernel-level access, or simply your eyes
+      moving to read will all still show something. The window is excluded from
+      the capture stream, and that is the whole of the claim.
+    </p>
+  </details>
+
+  <details class="qa">
+    <summary>Does it send my screen or my API key anywhere?</summary>
+    <p>
+      There are no servers. Requests go from your machine straight to the
+      provider whose key you entered, and the key itself is encrypted by the
+      operating system keychain. Nothing is collected, and there is no account
+      to create.
+    </p>
+  </details>
+</section>
+
 <footer class="foot">
   <span>Souffleur</span>
   <span class="foot-links">
+    <a href="/vs-cluely">vs Cluely</a>
     <a href="/docs">Docs</a>
     <a href="https://github.com/akshatgg/Souffleur">GitHub</a>
     <a href="https://github.com/akshatgg/Souffleur/releases">Releases</a>

@@ -1,0 +1,64 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1200px;height:630px;overflow:hidden}
+body{background:#0d1016;color:#eef1f6;font-family:'Instrument Sans',system-ui,sans-serif;
+  display:grid;grid-template-columns:1fr 430px;align-items:center;gap:40px;padding:58px 68px;position:relative}
+.glow{position:absolute;top:-220px;left:-120px;width:820px;height:620px;
+  background:radial-gradient(closest-side,rgba(242,200,120,.16),transparent 70%);filter:blur(10px)}
+.left{position:relative;z-index:2}
+.brand{display:flex;align-items:center;gap:12px;font-size:25px;font-weight:600;letter-spacing:-.01em;margin-bottom:34px}
+.mark{width:40px;height:28px}
+.mark-dome{fill:none;stroke:#f2c878;stroke-width:2.2}
+.mark-slot{fill:#f2c878}
+.mark-stage{stroke:rgba(255,255,255,.42);stroke-width:1.5}
+h1{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:82px;line-height:1.02;letter-spacing:-.02em}
+h1 em{font-style:italic;color:#f2c878}
+p{margin-top:24px;font-size:23px;line-height:1.45;color:#9aa4b4;max-width:23ch}
+.tags{margin-top:34px;display:flex;gap:9px}
+.tag{border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:7px 15px;font-size:15px;color:#9aa4b4}
+.tag.hot{border-color:#f2c878;color:#f2c878}
+.rig{position:relative;z-index:2;display:grid;gap:20px}
+.screen{border:1px solid rgba(255,255,255,.14);border-radius:13px;background:#12161e;padding:13px 15px;position:relative;height:186px;overflow:hidden}
+.cap{font-size:12.5px;color:#626c7c;display:flex;align-items:center;gap:7px;margin-bottom:10px;letter-spacing:.02em}
+.pip{width:6px;height:6px;border-radius:50%;background:#f2c878;box-shadow:0 0 8px #f2c878}
+.pip.rec{background:#e2564d;box-shadow:none}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:#626c7c;line-height:1.75}
+.kw{color:#b79be0}.fn{color:#77b7f0}
+.ov{position:absolute;right:13px;bottom:13px;left:74px;border:1px solid rgba(242,200,120,.4);
+  background:rgba(20,24,32,.96);border-radius:9px;padding:9px 11px}
+.ov-b{font-size:10.5px;color:#f2c878;display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.ov-t{font-size:12px;color:#eef1f6;line-height:1.4}
+.none{position:absolute;right:15px;bottom:15px;font-size:12px;color:#3b4453;font-style:italic}
+</style></head><body>
+<div class="glow"></div>
+<div class="left">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 32 22">
+      <line class="mark-stage" x1="1" y1="18" x2="31" y2="18"/>
+      <ellipse class="mark-dome" cx="16" cy="10" rx="10" ry="8"/>
+      <rect class="mark-slot" x="12.2" y="13.2" width="7.6" height="3.2" rx="1.6"/>
+    </svg>Souffleur
+  </div>
+  <h1>The prompter<br><em>they can't see</em></h1>
+  <p>A free, open-source AI overlay that stays out of the screen share.</p>
+  <div class="tags">
+    <span class="tag hot">Hidden in 151/151 frames</span>
+    <span class="tag">macOS &amp; Windows</span>
+  </div>
+</div>
+<div class="rig">
+  <div class="screen">
+    <div class="cap"><span class="pip"></span> Your screen</div>
+    <div class="code"><span class="kw">async function</span> <span class="fn">handler</span>(req) {<br>&nbsp;&nbsp;<span class="kw">const</span> rows = <span class="kw">await</span> db.<span class="fn">query</span>(sql);<br>}</div>
+    <div class="ov"><div class="ov-b"><span class="pip"></span> Hidden from screen share</div>
+      <div class="ov-t">Add a covering index, then paginate with a keyset cursor.</div></div>
+  </div>
+  <div class="screen">
+    <div class="cap"><span class="pip rec"></span> What the call sees</div>
+    <div class="code"><span class="kw">async function</span> <span class="fn">handler</span>(req) {<br>&nbsp;&nbsp;<span class="kw">const</span> rows = <span class="kw">await</span> db.<span class="fn">query</span>(sql);<br>}</div>
+    <div class="none">nothing here</div>
+  </div>
+</div>
+</body></html>
