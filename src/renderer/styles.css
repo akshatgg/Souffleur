@@ -163,6 +163,19 @@ body {
   margin-bottom: 5px;
 }
 
+/* A preview of what was actually captured. Small by default so it does not
+   crowd the answer, expandable when something looks wrong. */
+.shot-thumb {
+  display: block;
+  width: 130px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  margin: 4px 0 7px;
+  cursor: zoom-in;
+  transition: width 140ms ease;
+}
+.shot-thumb.big { width: 100%; cursor: zoom-out; }
+
 .turn pre {
   background: rgba(0, 0, 0, 0.32);
   border: 1px solid var(--rule);

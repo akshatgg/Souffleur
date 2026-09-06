@@ -90,7 +90,8 @@ async function send(withScreenshot) {
   const prompt = text || 'What is on my screen?';
   sealHeard();
   conversation.push({ role: 'user', content: prompt });
-  addTurn('user', renderText(prompt), withScreenshot ? 'screen attached' : null);
+  const askEl = addTurn('user', renderText(prompt), withScreenshot ? 'capturing screen\u2026' : null);
+  if (withScreenshot) pendingShot = askEl;
 
   inputEl.value = '';
   autofilled = '';
@@ -119,6 +120,37 @@ async function send(withScreenshot) {
   scrollDown();
   inputEl.focus();
 }
+
+let pendingShot = null;
+
+/**
+ * Show what was captured, not a promise that something was.
+ *
+ * A label saying "screen attached" is unfalsifiable: on two monitors it was
+ * impossible to tell the wrong display had been sent until the answer made no
+ * sense. The thumbnail makes a mistake visible immediately.
+ */
+window.souffleur.onShot((shot) => {
+  const el = pendingShot;
+  pendingShot = null;
+  if (!el || !shot || !shot.thumb) return;
+
+  const tag = el.querySelector('.shot-tag');
+  if (tag) {
+    tag.textContent = shot.displayCount > 1
+      ? `screen sent \u00b7 ${shot.label} \u00b7 ${shot.displayCount} displays`
+      : `screen sent \u00b7 ${shot.label}`;
+  }
+
+  const img = document.createElement('img');
+  img.className = 'shot-thumb';
+  img.src = shot.thumb;
+  img.alt = 'what was captured';
+  img.title = 'Click to enlarge';
+  img.addEventListener('click', () => img.classList.toggle('big'));
+  el.insertBefore(img, el.firstChild.nextSibling?.nextSibling || null);
+  scrollDown();
+});
 
 window.souffleur.onDelta((d) => {
   if (!streaming) return;

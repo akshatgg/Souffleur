@@ -385,7 +385,19 @@ ipcMain.handle('chat:send', async (event, { messages, withScreenshot }) => {
   let image = null;
   if (withScreenshot) {
     try {
-      image = await captureScreen();
+      // Capture whichever display the overlay is on, so a second monitor does
+      // not silently get captured instead of the one you are looking at.
+      const shot = await captureScreen(win && !win.isDestroyed() ? win.getBounds() : null);
+      image = shot.dataUrl;
+      // Show the user what was actually sent, rather than a label claiming a
+      // screenshot was attached.
+      if (!event.sender.isDestroyed()) {
+        event.sender.send('chat:shot', {
+          thumb: shot.thumb,
+          label: shot.label,
+          displayCount: shot.displayCount,
+        });
+      }
     } catch (err) {
       return { ok: false, error: `Screenshot failed: ${err.message}` };
     }

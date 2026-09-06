@@ -14,14 +14,14 @@
 # Regenerate with: npm run cask:update
 
 cask "souffleur" do
-  version "0.1.2"
+  version "0.1.3"
 
   on_arm do
-    sha256 "0357c8606b903cd3debaa2d0b9cc4a169ed53eb438474c04f8112acd0e3147db"
+    sha256 "1105dc8c999a194db3e938981ec6e58959940b3dfa488df70118cb526dc1f0da"
     url "https://github.com/akshatgg/Souffleur/releases/download/v#{version}/Souffleur-#{version}-arm64.dmg"
   end
   on_intel do
-    sha256 "ba6f1f03578874867af805708aa12c3bf4821eb5036bc12bc1ecfad8bfb8447a"
+    sha256 "ec099bd98ebcf6f56a075d3f46fb6f806327af655259ba062fdc27f293e8e658"
     url "https://github.com/akshatgg/Souffleur/releases/download/v#{version}/Souffleur-#{version}.dmg"
   end
 
