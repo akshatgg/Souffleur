@@ -246,12 +246,7 @@ async function refreshModels() {
 function wireSettings() {
   $('btnModels').onclick = refreshModels;
 
-  $('btnSettings').onclick = async () => {
-    // Click-through makes every click pass through the window. With it on, the
-    // settings panel renders normally but nothing in it responds -- it looks
-    // frozen. You cannot configure a window you cannot click, so opening
-    // settings always takes interactivity back.
-    await setClickThrough(false);
+  $('btnSettings').onclick = () => {
     $('settings').hidden = false;
     if (keyState[settings.provider] && !modelCache[settings.provider]) refreshModels();
   };
@@ -480,11 +475,9 @@ function paintListening(on) {
   listening = Boolean(on);
   $('btnListen').setAttribute('aria-pressed', String(listening));
   $('status').classList.toggle('listening', listening);
-  if (!clickThrough) {
-    $('statusText').textContent = listening
-      ? 'Listening to the call \u2014 hidden from screen share'
-      : baseStatusText;
-  }
+  $('statusText').textContent = listening
+    ? 'Listening to the call \u2014 hidden from screen share'
+    : baseStatusText;
 }
 
 /** Answer the most recent thing that was said, without typing it out. */
@@ -514,25 +507,6 @@ window.souffleur.onListenState((v) => paintListening(v));
 window.souffleur.onListenError((m) => addTurn('error', esc(m)));
 window.souffleur.onToggleListen(() => setListening(!listening));
 window.souffleur.onAnswerLast(() => answerLast());
-
-/* ----------------------------- click-through ------------------------------ */
-
-let clickThrough = false;
-
-/**
- * Clicks pass through to whatever is underneath. Announced in the status bar,
- * because an invisible mode that eats every click is otherwise indistinguishable
- * from the app having crashed.
- */
-async function setClickThrough(on) {
-  clickThrough = Boolean(await window.souffleur.setClickThrough(on));
-  $('btnClickThrough').setAttribute('aria-pressed', String(clickThrough));
-  $('status').classList.toggle('passthrough', clickThrough);
-  $('statusText').textContent = clickThrough
-    ? 'Clicks passing through \u2014 press \u2318\u21e7\\ to interact'
-    : baseStatusText;
-  return clickThrough;
-}
 
 /* --------------------------------- input ---------------------------------- */
 
@@ -572,23 +546,10 @@ function wireInput() {
   $('btnListen').onclick = () => setListening(!listening);
   $('btnShot').onclick = () => send(true);
   $('btnHide').onclick = () => window.souffleur.hide();
-
-  $('btnClickThrough').onclick = () =>
-    setClickThrough($('btnClickThrough').getAttribute('aria-pressed') !== 'true');
 }
 
 window.souffleur.onAskWithScreenshot(() => send(true));
 window.souffleur.onClear(clearChat);
-// Fired when the global hotkey flips it from the main process.
-window.souffleur.onClickThroughChanged((v) => {
-  clickThrough = Boolean(v);
-  $('btnClickThrough').setAttribute('aria-pressed', String(clickThrough));
-  $('status').classList.toggle('passthrough', clickThrough);
-  $('statusText').textContent = clickThrough
-    ? 'Clicks passing through \u2014 press \u2318\u21e7\\ to interact'
-    : baseStatusText;
-});
-
 /* ---------------------------------- boot ---------------------------------- */
 
 (async function boot() {

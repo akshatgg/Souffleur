@@ -40,12 +40,6 @@ function hideFromDock() {
   if (process.platform === 'darwin' && app.dock) app.dock.hide();
 }
 
-/** Pointer events pass through to whatever is underneath. */
-function setClickThrough(win, enabled) {
-  win.setIgnoreMouseEvents(enabled, { forward: true });
-  return enabled;
-}
-
 /**
  * Report what protection is actually in force, so the UI can state the truth
  * instead of assuming it.
@@ -79,4 +73,4 @@ function stealthStatus() {
   };
 }
 
-module.exports = { applyStealth, hideFromDock, setClickThrough, stealthStatus };
+module.exports = { applyStealth, hideFromDock, stealthStatus };

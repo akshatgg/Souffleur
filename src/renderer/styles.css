@@ -83,14 +83,6 @@ body {
 .status[data-state="exposed"] .dot { background: var(--alarm); }
 .status[data-state="exposed"] .status-text { color: var(--alarm); }
 
-.status.passthrough {
-  background: var(--alarm-wash);
-  border-bottom-color: rgba(242, 169, 59, 0.3);
-}
-.status.passthrough .dot,
-.status.passthrough .status-text { color: var(--alarm); }
-.status.passthrough .dot { background: var(--alarm); }
-
 .status-actions { display: flex; gap: 2px; -webkit-app-region: no-drag; }
 
 .icon-btn {

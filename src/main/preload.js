@@ -27,13 +27,11 @@ contextBridge.exposeInMainWorld('souffleur', {
   clearTranscript: () => ipcRenderer.invoke('listen:clear'),
   lastHeard: () => ipcRenderer.invoke('listen:last'),
 
-  setClickThrough: (on) => ipcRenderer.invoke('window:clickthrough', on),
   hide: () => ipcRenderer.invoke('window:close'),
 
   onDelta: (fn) => ipcRenderer.on('chat:delta', (_e, d) => fn(d)),
   onAskWithScreenshot: (fn) => ipcRenderer.on('hotkey:ask-with-screenshot', () => fn()),
   onClear: (fn) => ipcRenderer.on('hotkey:clear', () => fn()),
-  onClickThroughChanged: (fn) => ipcRenderer.on('clickthrough:changed', (_e, v) => fn(v)),
 
   onTranscript: (fn) => ipcRenderer.on('listen:transcript', (_e, t) => fn(t)),
   onListenState: (fn) => ipcRenderer.on('listen:state', (_e, v) => fn(v)),

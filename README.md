@@ -85,7 +85,6 @@ Keys are encrypted with the system keychain and never cross into the renderer.
 | `Shift+Z` | start / stop listening to the call |
 | `⌘⇧A` | answer the last thing they said |
 | `⌘⇧K` | clear the conversation |
-| `⌘⇧\` | click-through, so clicks reach what is underneath |
 | `⌘⇧← ↑ ↓ →` | move the window |
 
 The listen shortcut is configurable in settings. `Shift+Z` is a bare-letter

@@ -3,7 +3,7 @@ const { app, BrowserWindow, globalShortcut, ipcMain, screen, shell,
         systemPreferences, desktopCapturer, dialog } = require('electron');
 const path = require('path');
 
-const { applyStealth, hideFromDock, setClickThrough, stealthStatus } = require('./stealth');
+const { applyStealth, hideFromDock, stealthStatus } = require('./stealth');
 const { streamChat, listModels, transcribe, defaultTranscribeModel, PRESETS } = require('./providers');
 const { Listener } = require('./listen');
 const persona = require('./persona');
@@ -11,7 +11,6 @@ const store = require('./store');
 const { captureScreen } = require('./capture');
 
 let win = null;
-let clickThrough = false;
 let inFlight = null; // AbortController for the active completion
 let listener = null;
 let lastModelList = {};        // provider -> models, used to pick a transcription model
@@ -139,10 +138,6 @@ function registerShortcuts() {
   bind(`${mod}+Shift+Space`, toggleVisible);
   bind(`${mod}+Shift+Return`, () => win?.webContents.send('hotkey:ask-with-screenshot'));
   bind(`${mod}+Shift+K`, () => win?.webContents.send('hotkey:clear'));
-  bind(`${mod}+Shift+\\`, () => {
-    clickThrough = setClickThrough(win, !clickThrough);
-    win?.webContents.send('clickthrough:changed', clickThrough);
-  });
 
   // The listen toggle is user-configurable because a global accelerator is a
   // system-wide grab: bind it to a bare letter and that letter stops working
@@ -233,7 +228,6 @@ ipcMain.handle('bootstrap', () => ({
   keyStorage: store.keyStorageMode(),
   stealth: stealthStatus(),
   platform: process.platform,
-  clickThrough,
 }));
 
 ipcMain.handle('settings:set', (_e, patch) => {
@@ -342,11 +336,6 @@ ipcMain.handle('listen:last', () => {
     if (transcript[i].who !== 'you') return transcript[i].text;
   }
   return transcript.length ? transcript[transcript.length - 1].text : '';
-});
-
-ipcMain.handle('window:clickthrough', (_e, on) => {
-  clickThrough = setClickThrough(win, Boolean(on));
-  return clickThrough;
 });
 
 ipcMain.handle('window:close', () => { win?.hide(); });
