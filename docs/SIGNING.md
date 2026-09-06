@@ -122,11 +122,24 @@ as secrets. The build picks them up with no code change.
 
 ---
 
+## The keychain prompt
+
+An ad-hoc signature is derived from the binary, so it changes with every build.
+macOS treats each version as a different application, and asks again before
+letting it read the `souffleur Safe Storage` keychain item that holds the user's
+API key:
+
+> Souffleur wants to access key "souffleur Safe Storage" in your keychain.
+
+**Always Allow** silences it until the next update. A Developer ID certificate
+gives the app one identity across versions, and the prompt stops entirely — so
+notarisation fixes two things, not one.
+
 ## What each option actually buys
 
 | | macOS first launch | Windows first launch | Cost |
 |---|---|---|---|
 | Today | Settings → Open Anyway | More info → Run anyway | free |
 | Homebrew cask | no warning, Homebrew users only | unchanged | free |
-| Developer ID + notarisation | **no warning** | unchanged | 99 USD/yr |
+| Developer ID + notarisation | **no warning**, and no keychain prompt on update | unchanged | 99 USD/yr |
 | Both certificates | **no warning** | **no warning** (EV) | ~450 USD/yr |

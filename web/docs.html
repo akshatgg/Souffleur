@@ -258,6 +258,25 @@ npm start</code></pre>
 <h3>The overlay isn't visible</h3>
 <p>Press <kbd>Shift</kbd> + <kbd>Space</kbd>. It hides rather than quits, and there's no Dock icon by design.</p>
 
+<h3>It asks for my keychain password</h3>
+<p>
+  <em>“Souffleur wants to access key souffleur Safe Storage in your keychain.”</em>
+  Click <strong>Always Allow</strong> and enter your <strong>Mac login password</strong> — not your
+  Apple ID, and not your API key.
+</p>
+<p>
+  Your API key is encrypted with that keychain item. macOS will not hand an
+  existing item to a binary it has not seen before, which is the check that stops
+  other apps reading it.
+</p>
+<p>
+  Because the build is ad-hoc signed, its identity changes with every version, so
+  the prompt returns after each update. A Developer ID certificate gives the app
+  one stable identity and it stops asking — the same certificate that removes the
+  launch warning. See
+  <a href="https://github.com/akshatgg/Souffleur/blob/master/docs/SIGNING.md">SIGNING.md</a>.
+</p>
+
 <h3>“No API key set”</h3>
 <p>Keys are stored per provider. If you switched from Gemini to OpenAI, the OpenAI key is a separate one. If the app was renamed or moved, a stored key may no longer decrypt — settings will say so explicitly, and you just paste it again.</p>
 
