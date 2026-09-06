@@ -3,6 +3,10 @@
 A *souffleur* is the theatre prompter who sits hidden in a box below the stage
 and feeds actors their forgotten lines. The audience never sees them.
 
+**[getsouffleur.vercel.app](https://getsouffleur.vercel.app)** &nbsp;·&nbsp;
+[Download](https://github.com/akshatgg/Souffleur/releases/latest) &nbsp;·&nbsp;
+[Docs](https://getsouffleur.vercel.app/docs)
+
 This is that, for calls. A small always-on-top window that sees your screen,
 hears the room, and answers questions — while staying out of the screen-share
 stream everyone else is watching.
@@ -54,6 +58,18 @@ probes themselves are in [tools/](tools/).
 A useful consequence: the overlay is invisible to *every* ScreenCaptureKit
 consumer, including this app's own screenshot capture. The model never sees
 itself, and there is no hide/capture/show flicker.
+
+## Install
+
+Download the [latest release](https://github.com/akshatgg/Souffleur/releases/latest):
+a `.dmg` for macOS (`arm64` for Apple Silicon, the other for Intel) or the `.exe`
+installer for Windows.
+
+The macOS build is not notarised, so Gatekeeper will refuse it on a double-click.
+**Right-click the app and choose Open**, confirm once. Then grant Screen Recording
+in System Settings, or the overlay can neither see your screen nor hear the call.
+
+Audio capture is macOS-only for now.
 
 ## Requirements
 
