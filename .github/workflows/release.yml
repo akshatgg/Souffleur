@@ -208,10 +208,13 @@ jobs:
             **macOS** — download the `.dmg` for your chip (`arm64` for Apple
             Silicon, the other for Intel) and drag Souffleur to Applications.
 
-            The build is signed, but not by a certificate Apple recognises, so
-            macOS warns once. **Right-click the app and choose Open**, then Open
-            again. If it still refuses: System Settings → Privacy & Security →
-            **Open Anyway**.
+            macOS will say *"Apple could not verify Souffleur"*, offering only
+            **Done** and **Move to Bin**. That is not a dead end: click **Done**,
+            then open **System Settings → Privacy & Security**, scroll to the
+            bottom, and click **Open Anyway**. Once only.
+
+            Or clear the flag directly:
+            `xattr -dr com.apple.quarantine /Applications/Souffleur.app`
 
             Then grant **Screen Recording** in System Settings → Privacy &
             Security. Without it the overlay runs but cannot see your screen or

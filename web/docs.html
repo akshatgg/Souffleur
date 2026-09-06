@@ -39,29 +39,35 @@
 <ol>
   <li>Download the <code>.dmg</code> — <strong>arm64</strong> for Apple Silicon (M1 and newer), the other for Intel.</li>
   <li>Open it and drag <strong>Souffleur</strong> into Applications.</li>
-  <li>In Applications, <strong>right-click Souffleur and choose Open</strong>, then <strong>Open</strong> again in the dialog.</li>
+  <li>Open Souffleur. macOS will say <em>“Apple could not verify Souffleur is free of malware.”</em> Click <strong>Done</strong>.</li>
+  <li>Go to <strong>System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security</strong>, scroll to the bottom, and click <strong>Open Anyway</strong> next to Souffleur.</li>
+  <li>Confirm, and it opens. You only do this once.</li>
 </ol>
 
 <div class="callout">
   <p>
-    <strong>Why the warning?</strong> The build is signed, but not by a
-    certificate Apple recognises — that needs a paid Apple Developer account.
-    macOS therefore says it cannot verify the developer. Right-click → Open is
-    the supported way past it, and you only do it once.
+    <strong>Do not stop at the first dialog.</strong> It offers only “Done” and
+    “Move to Bin”, so it looks like a dead end. The approval lives in System
+    Settings, and the button appears there only after you have tried to open the
+    app at least once.
   </p>
   <p>
-    If macOS still refuses, open <strong>System Settings → Privacy &amp; Security</strong>,
-    scroll to the bottom, and press <strong>Open Anyway</strong>.
+    Right-clicking the app and choosing Open used to work; on macOS&nbsp;15 and
+    later it does not, which is why the steps above go through Settings.
   </p>
 </div>
 
+<h3>The one-line alternative</h3>
+<p>If you would rather not click through Settings, clear the download flag directly:</p>
+<pre><code>xattr -dr com.apple.quarantine /Applications/Souffleur.app</code></pre>
+<p>Then open the app normally. This is the same permission the Settings button grants.</p>
+
 <h3>If it says “Souffleur is damaged”</h3>
 <p>
-  That message means the quarantine flag survived on a copy whose signature no
-  longer matches — builds before <strong>0.1.1</strong> had that problem.
-  <strong>Download 0.1.1 or later.</strong> To rescue an existing copy, clear the flag:
+  That is a different message, and it means you have a build from before
+  <strong>0.1.1</strong>, which shipped with a broken signature.
+  <strong>Download 0.1.1 or later.</strong>
 </p>
-<pre><code>xattr -dr com.apple.quarantine /Applications/Souffleur.app</code></pre>
 
 <p>Then grant one permission:</p>
 <p><strong>System Settings → Privacy &amp; Security → Screen &amp; System Audio Recording → enable Souffleur.</strong></p>

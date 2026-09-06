@@ -66,15 +66,27 @@ a `.dmg` for macOS (`arm64` for Apple Silicon, the other for Intel) or the `.exe
 installer for Windows.
 
 Neither build is signed by a certificate the vendor recognises, so each warns
-once. On macOS, **right-click the app and choose Open** (or System Settings →
-Privacy & Security → Open Anyway). On Windows, **More info → Run anyway**.
+once.
+
+**macOS.** Opening the app shows *"Apple could not verify Souffleur is free of
+malware"*, with only **Done** and **Move to Bin** — it looks like a dead end but
+is not. Click Done, then open **System Settings → Privacy & Security**, scroll to
+the bottom and click **Open Anyway**. Right-click → Open worked on older macOS
+and no longer does on 15+.
+
+Or clear the flag directly:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Souffleur.app
+```
+
+**Windows.** SmartScreen: **More info → Run anyway**.
 
 Then grant Screen Recording on macOS, or the overlay can neither see your screen
 nor hear the call.
 
-If macOS says the app is *damaged* rather than unverified, you have a build from
-before 0.1.1; download a newer one, or clear the flag with
-`xattr -dr com.apple.quarantine /Applications/Souffleur.app`.
+If macOS says the app is *damaged* rather than unverified, that is a build from
+before 0.1.1; download a newer one.
 
 Audio capture is macOS-only for now.
 
