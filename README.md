@@ -69,6 +69,10 @@ itself, and there is no hide/capture/show flicker.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
+New to Homebrew? It is the standard package manager for macOS:
+[brew.sh](https://brew.sh) · [docs.brew.sh](https://docs.brew.sh) ·
+[FAQ](https://docs.brew.sh/FAQ)
+
 **2. Install Souffleur:**
 
 ```bash
@@ -76,6 +80,9 @@ brew install --cask akshatgg/tap/souffleur
 ```
 
 The app installs into Applications and opens with nothing to click through.
+
+Afterwards: `brew upgrade --cask souffleur` to update,
+`brew uninstall --cask souffleur` to remove.
 
 The disk image on the releases page works too, but the build is not notarised
 by Apple, so a manually downloaded copy is refused with *"Apple could not verify

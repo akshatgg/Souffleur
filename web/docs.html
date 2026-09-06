@@ -38,7 +38,26 @@
 <h3>macOS — use Homebrew</h3>
 <p><strong>1. Install Homebrew.</strong> Skip this if you already have it — check with <code>brew --version</code>.</p>
 <pre><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code></pre>
-<p>It asks for your Mac password and takes a few minutes. More at <a href="https://brew.sh">brew.sh</a>.</p>
+<p>
+  It asks for your Mac password and takes a few minutes. Homebrew is the standard
+  package manager for macOS — it installs command line tools and applications and
+  keeps them updated.
+</p>
+<p>
+  Homebrew's own documentation:
+  <a href="https://brew.sh" target="_blank" rel="noreferrer">brew.sh</a> ·
+  <a href="https://docs.brew.sh" target="_blank" rel="noreferrer">docs.brew.sh</a> ·
+  <a href="https://docs.brew.sh/FAQ" target="_blank" rel="noreferrer">FAQ</a> ·
+  <a href="https://docs.brew.sh/Installation" target="_blank" rel="noreferrer">installation guide</a>
+</p>
+<p>Useful afterwards:</p>
+<table>
+  <tr><th>Command</th><th>Does</th></tr>
+  <tr><td><code>brew --version</code></td><td>Check whether you already have it</td></tr>
+  <tr><td><code>brew upgrade --cask souffleur</code></td><td>Update Souffleur to the newest release</td></tr>
+  <tr><td><code>brew uninstall --cask souffleur</code></td><td>Remove it</td></tr>
+  <tr><td><code>brew info --cask souffleur</code></td><td>Show the installed version</td></tr>
+</table>
 
 <p><strong>2. Install Souffleur.</strong></p>
 <pre><code>brew install --cask akshatgg/tap/souffleur</code></pre>

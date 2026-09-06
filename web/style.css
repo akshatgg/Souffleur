@@ -387,7 +387,17 @@ h2 {
   margin-top: 3px;
 }
 .step-body { flex: 1; min-width: 0; }
-.step-title { font-size: 13px; color: var(--ink-dim); margin-bottom: 7px; }
+.step-title {
+  font-size: 13px;
+  color: var(--ink-dim);
+  margin-bottom: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.step-link { font-size: 11px; color: var(--ink-faint); }
+.step-link:hover { color: var(--gold); }
 
 .cmd {
   display: flex;
