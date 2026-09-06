@@ -1,0 +1,101 @@
+name: Release
+
+# Tag a version to cut a release:
+#   npm version patch && git push --follow-tags
+#
+# macOS and Windows each build on their own runner. Cross-building the Windows
+# installer from a Mac needs Wine and produces something nobody has actually
+# run; a Windows runner produces the artifact users will download.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # The audio tap and PDF extractor are Swift, and only exist on macOS.
+      - name: Build native helpers
+        run: npm run build:native
+
+      - name: Verify helpers were produced
+        run: |
+          test -x bin/audiotap || { echo "audiotap missing"; exit 1; }
+          test -x bin/pdftext  || { echo "pdftext missing";  exit 1; }
+
+      - run: npm test
+
+      - name: Build DMGs
+        run: npx electron-builder --mac --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: release/*.dmg
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+
+      # No Swift on Windows, so no audio capture or PDF import there yet. The
+      # app detects the missing helpers and says so rather than failing oddly.
+      - name: Build installer
+        run: npx electron-builder --win --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: release/*.exe
+
+  release:
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/macos/*.dmg
+            artifacts/windows/*.exe
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            **macOS** — download the `.dmg` for your chip (`arm64` for Apple
+            Silicon, the other for Intel), drag Souffleur to Applications.
+
+            The build is not notarised, so on first launch macOS will say it
+            cannot check the app for malicious software. **Right-click the app
+            and choose Open**, then confirm. You only do this once.
+
+            Then grant **Screen Recording** in System Settings → Privacy &
+            Security. Without it the overlay works but cannot see your screen
+            or hear the call.
+
+            **Windows** — run the `.exe` installer.
+
+            Audio capture is macOS-only for now.

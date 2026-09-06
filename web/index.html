@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Souffleur — the prompter they can't see</title>
+<meta name="description" content="A desktop assistant that reads your screen and hears your calls, while staying out of the screen share. Bring your own API key.">
+<meta property="og:title" content="Souffleur">
+<meta property="og:description" content="The prompter they can't see. A desktop assistant that stays out of the screen share.">
+<meta property="og:type" content="website">
+<link rel="icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="/">
+    <span class="mark" aria-hidden="true"></span>
+    Souffleur
+  </a>
+  <div class="nav-links">
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/akshatgg/Souffleur">Source</a>
+    <a class="nav-cta" href="#download">Download</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-copy">
+    <h1>The prompter <em>they can't see</em></h1>
+    <p class="lede">
+      A small window that reads your screen and listens to your call, sitting on
+      top of everything you do — and absent from the stream everyone else is
+      watching.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#download" data-os-label>Download for macOS</a>
+      <a class="btn" href="/docs">Read the docs</a>
+    </div>
+    <p class="fine">Free and open source. Your own API key. No account, no server.</p>
+  </div>
+
+  <!-- The hero is the product claim, demonstrated: one screen, two views. -->
+  <div class="stage" id="stage" aria-label="The same screen as you see it, and as it appears in a screen share">
+    <div class="stage-light" aria-hidden="true"></div>
+    <div class="rig" id="rig">
+
+      <figure class="screen screen-you">
+        <figcaption><span class="pip pip-live"></span> Your screen</figcaption>
+        <div class="glass">
+          <div class="code">
+            <span class="c-kw">async function</span> <span class="c-fn">handler</span>(req) {<br>
+            &nbsp;&nbsp;<span class="c-kw">const</span> rows = <span class="c-kw">await</span> db.<span class="c-fn">query</span>(sql);<br>
+            &nbsp;&nbsp;<span class="c-kw">return</span> rows.<span class="c-fn">map</span>(toDto);<br>
+            }
+          </div>
+          <div class="overlay" id="overlay">
+            <div class="overlay-bar"><span class="pip"></span> Hidden from screen share</div>
+            <div class="overlay-heard">how would you scale that query?</div>
+            <div class="overlay-answer">
+              I'd add a covering index on the filter columns first, then paginate
+              with a keyset cursor instead of OFFSET — that keeps it flat as the
+              table grows.
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="screen screen-them">
+        <figcaption><span class="pip pip-rec"></span> What the call sees</figcaption>
+        <div class="glass">
+          <div class="code">
+            <span class="c-kw">async function</span> <span class="c-fn">handler</span>(req) {<br>
+            &nbsp;&nbsp;<span class="c-kw">const</span> rows = <span class="c-kw">await</span> db.<span class="c-fn">query</span>(sql);<br>
+            &nbsp;&nbsp;<span class="c-kw">return</span> rows.<span class="c-fn">map</span>(toDto);<br>
+            }
+          </div>
+          <div class="absent">nothing here</div>
+        </div>
+      </figure>
+
+    </div>
+  </div>
+</header>
+
+<section class="proof">
+  <div class="proof-copy">
+    <h2>Measured, not claimed</h2>
+    <p>
+      Every tool in this category says it is invisible. Apple's own developer
+      forums say the flag they all depend on stopped working, with an Apple
+      engineer stating there is <em>no public API for preventing screen
+      capture</em>.
+    </p>
+    <p>
+      So it was tested instead of assumed. Three windows — one protected, one
+      excluded by filter, one unprotected control — captured through a live
+      30&nbsp;fps <code>SCStream</code>, the same ScreenCaptureKit path Zoom,
+      Meet, Teams and OBS use.
+    </p>
+    <p class="fine">
+      The control is the point. Without a window that <em>should</em> appear,
+      “nothing was captured” proves nothing.
+    </p>
+  </div>
+  <div class="proof-data">
+    <div class="metric">
+      <span class="metric-label">control, unprotected</span>
+      <span class="metric-value">100<span class="unit">%</span></span>
+      <span class="metric-note">captured in every frame</span>
+    </div>
+    <div class="metric is-zero">
+      <span class="metric-label">sharingType = .none</span>
+      <span class="metric-value">0<span class="unit">%</span></span>
+      <span class="metric-note">hidden in all 151 frames</span>
+    </div>
+    <div class="metric is-zero">
+      <span class="metric-label">excludingWindows</span>
+      <span class="metric-value">0<span class="unit">%</span></span>
+      <span class="metric-note">hidden in all 151 frames</span>
+    </div>
+    <a class="proof-link" href="https://github.com/akshatgg/Souffleur/blob/master/docs/VERIFICATION.md">Method and caveats</a>
+  </div>
+</section>
+
+<section class="features">
+  <article>
+    <h3>Sees your screen</h3>
+    <p>
+      One key captures whatever you're looking at and sends it with your
+      question. The overlay is excluded from that capture too, so the model
+      never sees itself.
+    </p>
+  </article>
+  <article>
+    <h3>Hears the call</h3>
+    <p>
+      System audio is transcribed as people speak and dropped straight into the
+      chat box, so answering is one keystroke. Split at pauses, never mid-word.
+    </p>
+  </article>
+  <article>
+    <h3>Answers as you</h3>
+    <p>
+      Add your CV and it answers in the first person from your real history —
+      and is told not to invent employers, dates or numbers that aren't in it.
+    </p>
+  </article>
+  <article>
+    <h3>Your key, your data</h3>
+    <p>
+      Gemini, OpenAI, or any OpenAI-compatible endpoint. Keys are encrypted in
+      the system keychain. Nothing routes through a server of ours, because
+      there isn't one.
+    </p>
+  </article>
+</section>
+
+<section class="download" id="download">
+  <h2>Download</h2>
+  <p class="lede">Free. No account. Bring an API key from whichever provider you prefer.</p>
+
+  <div class="dl-grid">
+    <a class="dl" id="dl-mac-arm" href="https://github.com/akshatgg/Souffleur/releases/latest">
+      <span class="dl-os">macOS</span>
+      <span class="dl-arch">Apple Silicon</span>
+      <span class="dl-meta">.dmg &middot; M1 and newer</span>
+    </a>
+    <a class="dl" id="dl-mac-intel" href="https://github.com/akshatgg/Souffleur/releases/latest">
+      <span class="dl-os">macOS</span>
+      <span class="dl-arch">Intel</span>
+      <span class="dl-meta">.dmg &middot; x64</span>
+    </a>
+    <a class="dl" id="dl-win" href="https://github.com/akshatgg/Souffleur/releases/latest">
+      <span class="dl-os">Windows</span>
+      <span class="dl-arch">10 and 11</span>
+      <span class="dl-meta">.exe installer</span>
+    </a>
+  </div>
+
+  <div class="notices">
+    <p>
+      <strong>macOS will warn you on first launch.</strong> The build isn't
+      notarised, so Gatekeeper says it can't be checked for malicious software.
+      Right-click the app, choose <strong>Open</strong>, confirm once. Then grant
+      Screen Recording in System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security.
+    </p>
+    <p>
+      <strong>Audio capture is macOS-only</strong> for now. On Windows the
+      overlay, screenshots and chat all work; hearing the call does not.
+    </p>
+  </div>
+</section>
+
+<footer class="foot">
+  <span>Souffleur</span>
+  <span class="foot-links">
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/akshatgg/Souffleur">GitHub</a>
+    <a href="https://github.com/akshatgg/Souffleur/releases">Releases</a>
+  </span>
+  <span class="fine">Check the rules that apply to you before using this in an interview or exam.</span>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

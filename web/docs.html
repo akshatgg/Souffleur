@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs — Souffleur</title>
+<meta name="description" content="Install Souffleur, connect a provider, and use the overlay, screen capture, call transcription and interview mode.">
+<link rel="icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="/"><span class="mark" aria-hidden="true"></span> Souffleur</a>
+  <div class="nav-links">
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/akshatgg/Souffleur">Source</a>
+    <a class="nav-cta" href="/#download">Download</a>
+  </div>
+</nav>
+
+<main class="docs">
+
+<h1>Docs</h1>
+<p class="lede">
+  Everything from first launch to answering a question you never typed.
+</p>
+
+<h2>Install</h2>
+
+<h3>macOS</h3>
+<ol>
+  <li>Download the <code>.dmg</code> — <strong>arm64</strong> for Apple Silicon (M1 and newer), the other for Intel.</li>
+  <li>Drag <strong>Souffleur</strong> into Applications.</li>
+  <li><strong>Right-click the app and choose Open</strong>, then confirm.</li>
+</ol>
+
+<div class="callout">
+  <p>
+    <strong>Why the warning?</strong> The build isn't notarised by Apple, so
+    Gatekeeper says it cannot check the app for malicious software. Double-clicking
+    gives you no way past it; right-click → Open does. You only do this once.
+  </p>
+</div>
+
+<p>Then grant one permission:</p>
+<p><strong>System Settings → Privacy &amp; Security → Screen &amp; System Audio Recording → enable Souffleur.</strong></p>
+<p>
+  Without it the overlay still runs, but it cannot capture your screen or hear
+  the call — ScreenCaptureKit accepts the request and silently delivers nothing.
+</p>
+
+<h3>Windows</h3>
+<p>Run the <code>.exe</code> installer. The overlay, screenshots and chat all work. Call audio does not yet — that part is macOS-only.</p>
+
+<h3>From source</h3>
+<pre><code>git clone https://github.com/akshatgg/Souffleur.git
+cd Souffleur
+npm install
+npm run build:native   # macOS only: audio tap + PDF reader
+npm start</code></pre>
+
+<h2>Connect a provider</h2>
+<p>Souffleur has no server and no account. It talks to whichever provider you give it a key for, and nothing else.</p>
+
+<table>
+  <tr><th>Provider</th><th>Get a key</th></tr>
+  <tr><td><strong>Google Gemini</strong></td><td>aistudio.google.com/apikey</td></tr>
+  <tr><td><strong>OpenAI</strong></td><td>platform.openai.com/api-keys</td></tr>
+  <tr><td><strong>Anything OpenAI-compatible</strong></td><td>Groq, Together, OpenRouter, Ollama, LM Studio, vLLM — pick <strong>Other</strong> and give it a base URL</td></tr>
+</table>
+
+<p>Open settings with the <strong>⚙</strong> button, choose a provider, paste your key, then press <strong>Save</strong>.</p>
+
+<p>
+  The model list is fetched <strong>from your own key</strong> rather than hardcoded, so it
+  shows what you can actually reach and doesn't rot when a provider retires a
+  model. Press <strong>↻</strong> to refetch.
+</p>
+
+<div class="callout">
+  <p>
+    Keys are encrypted with your system keychain and stored per provider, so you
+    can keep several and switch. The app window can never read a key back — it
+    can only set one, or ask whether one exists.
+  </p>
+</div>
+
+<h2>Shortcuts</h2>
+<table>
+  <tr><th>Key</th><th>Does</th></tr>
+  <tr><td><kbd>⌘⇧Space</kbd></td><td>Show or hide the overlay</td></tr>
+  <tr><td><kbd>⌘⇧↵</kbd></td><td>Capture your screen and ask about it</td></tr>
+  <tr><td><kbd>Shift+Z</kbd></td><td>Start or stop listening to the call</td></tr>
+  <tr><td><kbd>⌘⇧A</kbd></td><td>Answer the last thing the other person said</td></tr>
+  <tr><td><kbd>⌘⇧K</kbd></td><td>Clear the conversation</td></tr>
+  <tr><td><kbd>⌘⇧←↑↓→</kbd></td><td>Move the window</td></tr>
+  <tr><td><kbd>Esc</kbd></td><td>Close settings, stop a reply, or hide</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong><kbd>Shift+Z</kbd> is a bare-letter global shortcut.</strong> It is
+    grabbed system-wide, so while it is bound, typing a capital Z in other apps
+    toggles listening instead of producing the letter. Change it under
+    <strong>Settings → Listen shortcut</strong>; <kbd>Alt+Shift+Z</kbd> avoids the clash.
+  </p>
+</div>
+
+<h2>Asking about your screen</h2>
+<p>
+  Press <kbd>⌘⇧↵</kbd> — or the <strong>▣</strong> button — and whatever is on
+  screen is captured and sent with your question. Type a question first to be
+  specific, or send nothing and it answers “what is on my screen?”
+</p>
+<p>
+  The overlay excludes itself from that capture, so the model sees your work
+  without seeing its own previous answer, and there's no hide-capture-show
+  flicker to sit through.
+</p>
+
+<h2>Listening to the call</h2>
+<p>
+  Press <kbd>Shift+Z</kbd>. Souffleur taps the audio coming out of your speakers
+  — the other person's voice — transcribes it, and drops each line straight into
+  the chat box. Press <kbd>Enter</kbd> to ask it.
+</p>
+
+<h3>How it decides where a sentence ends</h3>
+<p>
+  Speech is split at <strong>pauses, not on a timer</strong>. A fixed window
+  slices words in half and bills you for silence. Anything shorter than 0.9s is
+  discarded as noise; anything over 20s is cut so long answers still stream.
+</p>
+<p>
+  So lines appear a second or two <em>after</em> someone stops talking, not while
+  they speak.
+</p>
+
+<h3>Your own voice</h3>
+<p>
+  Microphone capture is <strong>off by default</strong> — the point is hearing them, not you.
+  When enabled, the two sources stay on separate channels so the transcript
+  knows who said what, and <kbd>⌘⇧A</kbd> still answers <em>their</em> last line, not yours.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>Nothing appearing?</strong> The status bar tells you which stage is
+    failing: no audio arriving at all means the capture stream isn't really
+    running, which is nearly always the Screen Recording permission. Audio
+    arriving but below the speech threshold means the volume is too low.
+  </p>
+</div>
+
+<h2>Interview mode</h2>
+<p>
+  Add up to <strong>four PDFs</strong> describing you — CV, portfolio, work history — and
+  Souffleur answers in the first person as you, from your real background.
+</p>
+<ol>
+  <li>Settings → <strong>Documents about you</strong> → <strong>Add PDF</strong></li>
+  <li>Turn on <strong>Interview mode</strong></li>
+  <li>Your name is read from the first document; correct it if it's wrong</li>
+  <li><strong>Save</strong></li>
+</ol>
+
+<p>Answers become spoken-length and first person, the way someone actually talks in a room, and technical questions are answered concretely.</p>
+
+<div class="callout">
+  <p>
+    <strong>It won't invent a history.</strong> The model is instructed to keep every claim about
+    your experience inside the documents — no invented employers, titles, dates,
+    clients or numbers. Asked about something not in there, it says how you'd
+    approach it and what in your background is closest, instead of claiming it.
+    A fabricated employer is the one thing an interviewer catches instantly.
+  </p>
+</div>
+
+<p>Text is extracted once when you upload, not re-sent with every message. Scanned PDFs with no text layer are rejected — they'd need OCR.</p>
+
+<h2>Is it really hidden?</h2>
+<p>
+  On macOS the overlay sets <code>NSWindowSharingNone</code>, which excludes it
+  from ScreenCaptureKit — the capture path Zoom, Meet, Teams, Discord and OBS all
+  use. On Windows it uses <code>WDA_EXCLUDEFROMCAPTURE</code>.
+</p>
+<p>
+  This was <a href="https://github.com/akshatgg/Souffleur/blob/master/docs/VERIFICATION.md">verified by measurement</a>,
+  not assumed: three windows captured through a live 30fps stream, of which the
+  unprotected control appeared in 100% of frames and both protected windows in
+  none of 151.
+</p>
+
+<h3>What it does not protect against</h3>
+<ul>
+  <li>A phone camera pointed at your screen, or anyone sitting next to you</li>
+  <li>Linux — no compositor implements capture exclusion, so the overlay is visible</li>
+  <li>Windows before build 19041, where the window becomes a black box instead of being excluded</li>
+  <li>A future OS release changing this behaviour</li>
+</ul>
+<p>
+  The status bar reads the platform at runtime rather than trusting an
+  assumption, and turns amber when protection is not actually in force. If it
+  says hidden, that's a live check, not a promise made at build time.
+</p>
+
+<h2>Troubleshooting</h2>
+
+<h3>The overlay isn't visible</h3>
+<p>Press <kbd>⌘⇧Space</kbd>. It hides rather than quits, and there's no Dock icon by design.</p>
+
+<h3>“No API key set”</h3>
+<p>Keys are stored per provider. If you switched from Gemini to OpenAI, the OpenAI key is a separate one. If the app was renamed or moved, a stored key may no longer decrypt — settings will say so explicitly, and you just paste it again.</p>
+
+<h3>A model returns nothing</h3>
+<p>Open settings and press <strong>↻</strong> to reload the model list from your key, then pick one from the dropdown. Providers retire models, and the error will name the real cause.</p>
+
+<h3>Nothing is transcribed</h3>
+<p>Check Screen Recording is granted, and that audio is actually playing through your speakers rather than a headset the tap can't see.</p>
+
+<h2>Privacy</h2>
+<ul>
+  <li>No account, no telemetry, no server of ours — there isn't one to run.</li>
+  <li>Screenshots, audio and documents go only to the provider whose key you supplied.</li>
+  <li>Keys are encrypted in the system keychain; the UI can never read one back.</li>
+  <li>Transcripts live in memory and are gone when you quit.</li>
+</ul>
+
+<div class="callout">
+  <p>
+    Many employers, universities and certification bodies prohibit assistance of
+    this kind in interviews and exams. Worth knowing which rules apply to you
+    before you rely on it.
+  </p>
+</div>
+
+</main>
+
+<footer class="foot">
+  <span>Souffleur</span>
+  <span class="foot-links">
+    <a href="/">Home</a>
+    <a href="https://github.com/akshatgg/Souffleur">GitHub</a>
+    <a href="https://github.com/akshatgg/Souffleur/releases">Releases</a>
+  </span>
+</footer>
+
+</body>
+</html>

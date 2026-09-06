@@ -7,3 +7,8 @@ bin/
 .DS_Store
 dist/
 out/
+release/
+.vercel/
+web/.vercel/
+.env.local
+web/.env.local
