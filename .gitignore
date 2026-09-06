@@ -12,3 +12,5 @@ release/
 web/.vercel/
 .env.local
 web/.env.local
+.vercel
+.env*
