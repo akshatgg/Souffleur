@@ -147,9 +147,18 @@ knows who spoke.
   platform at runtime rather than trusting a build-time assumption, and turns
   amber when protection is not actually in force.
 
-## Releasing
+## Two deployments, and they are not the same thing
 
-The **git tag decides the version**. Nothing picks it automatically.
+**The website** deploys on every push to `master`. No version, no tag, nothing
+to run — Vercel builds `web/` and publishes it.
+
+```bash
+git push          # site is live in about a minute
+```
+
+**The app installers** are a release, and you choose the version.
+
+### From your machine
 
 ```bash
 npm run release:patch    # 0.1.1 -> 0.1.2, bug fixes
@@ -157,13 +166,25 @@ npm run release:minor    # 0.1.1 -> 0.2.0, new features
 npm run release:major    # 0.1.1 -> 1.0.0, breaking changes
 ```
 
-Each bumps `package.json`, commits, tags, and pushes both. Pushing the tag
-triggers CI, which builds macOS and Windows on their own runners and publishes
-the installers to a GitHub release.
+Each bumps `package.json`, commits, tags, and pushes both. The tag triggers CI,
+which builds macOS and Windows on their own runners and publishes the
+installers.
 
-CI refuses to build if the tag and `package.json` disagree, so a release cannot
-end up containing files named after a different version. The **Run workflow**
-button builds artifacts without publishing — the release step only runs for tags.
+### From GitHub
+
+**Actions → Release → Run workflow**, then type a version such as `0.1.2`.
+CI builds, publishes, tags, and writes the version back to `package.json`.
+
+Leave the version blank to build the installers **without publishing** — useful
+for checking a build without spending a version number on it.
+
+### Guard rails
+
+- A tag that disagrees with `package.json` fails before anything is built
+- A version that already has a release is refused, rather than overwriting it
+- Any job that produces no installer fails, and the release fails if fewer than
+  three arrive — an earlier release published with zero assets because that was
+  only a warning
 
 ## Tests
 
