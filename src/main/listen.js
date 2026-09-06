@@ -169,6 +169,30 @@ class Listener extends EventEmitter {
     return this.segmenters.get(source);
   }
 
+  /**
+   * Windows has a real loopback device, so Chromium can capture system audio
+   * itself through getDisplayMedia. The renderer does the capture and hands
+   * PCM here, which then runs through exactly the same silence gate and
+   * transcription queue as the macOS helper's output.
+   */
+  startExternal() {
+    if (this.running) return { ok: true, already: true };
+    this.running = true;
+    this.raw = Buffer.alloc(0);
+    this.totalBytes = 0;
+    this.segmenters.clear();
+    this.startHeartbeat();
+    this.emit('state', true);
+    return { ok: true, mode: 'renderer' };
+  }
+
+  /** s16le mono 16 kHz from the renderer's capture. */
+  pushExternal(pcm) {
+    if (!this.running || !pcm || !pcm.length) return;
+    this.totalBytes += pcm.length;
+    this.segmenterFor(0).push(Buffer.from(pcm));
+  }
+
   start(opts = {}) {
     if (this.running) return { ok: true, already: true };
 
@@ -219,9 +243,17 @@ class Listener extends EventEmitter {
       this.emit('state', false);
     });
 
-    // A periodic heartbeat turns "nothing happened" into a diagnosis: it
-    // distinguishes no audio arriving at all from audio arriving that is
-    // simply too quiet to cross the speech threshold.
+    this.startHeartbeat();
+
+    this.emit('state', true);
+    return { ok: true };
+  }
+
+  // A periodic heartbeat turns "nothing happened" into a diagnosis: it
+  // distinguishes no audio arriving at all from audio arriving that is simply
+  // too quiet to cross the speech threshold.
+  startHeartbeat() {
+    clearInterval(this.heartbeat);
     this.heartbeat = setInterval(() => {
       const parts = [...this.segmenters.values()]
         .map((s) => `${s.label} loudest=${s.loudestSeen.toFixed(4)}`)
@@ -239,14 +271,15 @@ class Listener extends EventEmitter {
       }
     }, 10000);
 
-    this.emit('state', true);
-    return { ok: true };
+    // A diagnostic timer must never be the reason the process stays alive.
+    this.heartbeat.unref?.();
   }
 
   stop() {
     clearInterval(this.heartbeat);
     for (const s of this.segmenters.values()) s.flush();  // keep the last sentence
     if (this.proc) this.proc.kill('SIGTERM');
+    this.proc = null;
     this.running = false;
     this.emit('state', false);
     return { ok: true };

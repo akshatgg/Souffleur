@@ -1,6 +1,6 @@
 'use strict';
 const { app, BrowserWindow, globalShortcut, ipcMain, screen, shell,
-        systemPreferences, desktopCapturer, dialog } = require('electron');
+        systemPreferences, desktopCapturer, dialog, session } = require('electron');
 const path = require('path');
 
 const { applyStealth, hideFromDock, stealthStatus } = require('./stealth');
@@ -156,11 +156,15 @@ ipcMain.handle('bootstrap', () => ({
   keyStorage: store.keyStorageMode(),
   stealth: stealthStatus(),
   platform: process.platform,
-  // Both native helpers are Swift, so audio capture and PDF import exist only
-  // in macOS builds. The UI disables rather than silently failing.
+  // PDF reading is pure JavaScript and works everywhere. Audio capture still
+  // needs a platform helper, so the UI disables it where there is none rather
+  // than failing when pressed.
   capabilities: {
-    audio: process.platform === 'darwin',
-    pdf: process.platform === 'darwin',
+    // macOS captures through the ScreenCaptureKit helper; Windows captures in
+    // the renderer through Chromium's loopback support. Linux has neither.
+    audio: process.platform === 'darwin' || process.platform === 'win32',
+    audioMode: process.platform === 'darwin' ? 'helper' : 'renderer',
+    pdf: true,
   },
 }));
 
@@ -241,7 +245,35 @@ ipcMain.handle('docs:remove', (_e, id) => persona.remove(id));
 
 /* -------------------------------- listening -------------------------------- */
 
+/**
+ * Windows: let the renderer capture system audio itself.
+ *
+ * getDisplayMedia normally shows a picker and returns whatever the user chose.
+ * Answering the request here with 'loopback' audio gives the renderer the
+ * system mix with no picker, which is what a call assistant needs. Chromium
+ * supports this on Windows; macOS has no loopback device, which is why that
+ * platform goes through the ScreenCaptureKit helper instead.
+ */
+function grantLoopbackAudio() {
+  session.defaultSession.setDisplayMediaRequestHandler(async (request, callback) => {
+    try {
+      const sources = await desktopCapturer.getSources({ types: ['screen'] });
+      callback({ video: sources[0], audio: 'loopback' });
+    } catch {
+      callback({});
+    }
+  }, { useSystemPicker: false });
+}
+
+ipcMain.handle('listen:pcm', (_e, buf) => {
+  if (buf && buf.byteLength) ensureListener().pushExternal(Buffer.from(buf));
+  return true;
+});
+
 ipcMain.handle('listen:start', async () => {
+  // Windows captures in the renderer; there is no helper to spawn.
+  if (process.platform !== 'darwin') return ensureListener().startExternal();
+
   const status = screenPermission();
   if (status !== 'granted' && status !== 'unknown') {
     // Touching desktopCapturer is what makes macOS list Electron in the pane;
@@ -349,6 +381,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     hideFromDock();
+    if (process.platform !== 'darwin') grantLoopbackAudio();
     createWindow();
     registerShortcuts();
 

@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('souffleur', {
 
   hotkeyStatus: () => ipcRenderer.invoke('hotkey:check'),
   startListening: () => ipcRenderer.invoke('listen:start'),
+  sendPcm: (buf) => ipcRenderer.invoke('listen:pcm', buf),
   stopListening: () => ipcRenderer.invoke('listen:stop'),
   listenState: () => ipcRenderer.invoke('listen:state'),
   clearTranscript: () => ipcRenderer.invoke('listen:clear'),

@@ -483,8 +483,77 @@ function sealHeard() {
   if (last && last.classList.contains('heard')) last.dataset.sealed = '1';
 }
 
+/**
+ * Windows capture, done in the renderer.
+ *
+ * Chromium can hand us the system audio mix on Windows, which macOS cannot do
+ * without a native helper. The samples are converted to the same s16le mono
+ * 16 kHz the helper produces, so the main process runs one pipeline regardless
+ * of where the audio came from.
+ */
+let rendererCapture = null;
+
+async function startRendererCapture() {
+  const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+
+  // Only the audio is wanted; the video track exists because getDisplayMedia
+  // requires it, and leaving it running costs a screen capture for nothing.
+  stream.getVideoTracks().forEach((t) => t.stop());
+
+  const tracks = stream.getAudioTracks();
+  if (!tracks.length) {
+    stream.getTracks().forEach((t) => t.stop());
+    throw new Error('Windows returned no system audio. Check that sound is playing through the default output device.');
+  }
+
+  const ctx = new AudioContext({ sampleRate: 16000 });
+  const src = ctx.createMediaStreamSource(new MediaStream(tracks));
+  const node = ctx.createScriptProcessor(4096, 1, 1);
+
+  // A silent sink. ScriptProcessor only runs while connected to the graph, but
+  // routing it to the speakers would play the call back into the room.
+  const mute = ctx.createGain();
+  mute.gain.value = 0;
+
+  node.onaudioprocess = (e) => {
+    const f = e.inputBuffer.getChannelData(0);
+    const pcm = new Int16Array(f.length);
+    for (let i = 0; i < f.length; i++) {
+      const v = Math.max(-1, Math.min(1, f[i]));
+      pcm[i] = v * 32767;
+    }
+    window.souffleur.sendPcm(pcm.buffer);
+  };
+
+  src.connect(node);
+  node.connect(mute);
+  mute.connect(ctx.destination);
+
+  rendererCapture = () => {
+    node.onaudioprocess = null;
+    node.disconnect(); src.disconnect(); mute.disconnect();
+    ctx.close().catch(() => {});
+    stream.getTracks().forEach((t) => t.stop());
+    rendererCapture = null;
+  };
+}
+
 async function setListening(on) {
+  if (!on && rendererCapture) rendererCapture();
+
   const res = on ? await window.souffleur.startListening() : await window.souffleur.stopListening();
+
+  // The main process says when it wants the renderer to do the capturing.
+  if (on && res && res.ok !== false && res.mode === 'renderer') {
+    try {
+      await startRendererCapture();
+    } catch (err) {
+      await window.souffleur.stopListening();
+      addTurn('error', esc(err.message || 'Could not capture system audio.'));
+      paintListening(false);
+      return false;
+    }
+  }
   if (res && res.ok === false) {
     addTurn('error', esc(res.error));
     paintListening(false);

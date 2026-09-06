@@ -97,14 +97,14 @@ jobs:
 
       - run: npm ci
 
-      # The audio tap and PDF reader are Swift, and exist only on macOS.
+      # The audio tap is Swift and exists only on macOS. PDF reading is
+      # JavaScript now, so it needs no helper on any platform.
       - name: Build native helpers
         run: npm run build:native
 
       - name: Verify helpers were produced
         run: |
           test -x bin/audiotap || { echo "audiotap missing"; exit 1; }
-          test -x bin/pdftext  || { echo "pdftext missing";  exit 1; }
 
       - run: npm test
 

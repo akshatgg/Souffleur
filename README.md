@@ -86,10 +86,11 @@ SmartScreen warns once: **More info → Run anyway**.
 Grant **Screen Recording** on macOS, or the overlay can neither see your screen
 nor hear the call.
 
-**Two features are macOS-only:** hearing the call (ScreenCaptureKit) and reading
-PDFs for interview mode (PDFKit). Both are Swift helpers with no Windows
-equivalent yet, so the controls are disabled there rather than failing when
-pressed. The overlay, screenshots and chat work on both.
+Everything works on both platforms. Call audio takes a different route on each:
+Windows has a real loopback device, so Chromium captures the system mix
+directly, while macOS has none and uses a small ScreenCaptureKit helper. Both
+feed the same silence gate and transcription. PDF reading is pure JavaScript
+and runs anywhere.
 
 Removing the warnings for everyone needs paid certificates on each platform. The
 pipeline is already wired for both — see [docs/SIGNING.md](docs/SIGNING.md); it

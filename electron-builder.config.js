@@ -79,7 +79,9 @@ module.exports = {
         'Souffleur transcribes your own voice only when you turn on microphone capture.',
       NSCameraUsageDescription: 'Not used.',
     },
-    extraResources: [{ from: 'bin', to: 'bin', filter: ['**/*'] }],
+    // Only the audio tap is native now; PDF reading moved to JavaScript so it
+    // works on every platform.
+    extraResources: [{ from: 'bin', to: 'bin', filter: ['audiotap'] }],
   },
 
   dmg: {

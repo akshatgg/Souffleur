@@ -193,7 +193,7 @@
       <span class="dl-os">Windows</span>
       <span class="dl-arch">10 and 11</span>
       <span class="dl-meta">.exe installer &middot; 206 MB</span>
-      <span class="dl-why-win">SmartScreen warns once — More info, then Run anyway. The overlay, screenshots and chat all work; hearing the call and reading PDFs are macOS-only for now.</span>
+      <span class="dl-why-win">SmartScreen warns once — More info, then Run anyway. Everything works: overlay, screenshots, chat, call transcription and interview mode.</span>
     </a>
   </div>
 
@@ -204,10 +204,9 @@
       cannot see your screen or hear the call.
     </p>
     <p>
-      <strong>Two features are macOS-only for now:</strong> hearing the call, and
-      reading the PDFs that interview mode answers from. Both rely on native
-      macOS frameworks. Everything else — the hidden overlay, screenshots, and
-      chat against any provider — works on both.
+      <strong>Everything works on both.</strong> Call audio is captured through
+      ScreenCaptureKit on macOS and Chromium's loopback support on Windows;
+      the rest of the pipeline is shared.
     </p>
   </div>
 </section>

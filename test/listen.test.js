@@ -122,3 +122,60 @@ test('garbage in the stream resynchronises instead of poisoning audio', () => {
     resolve();
   }));
 });
+
+/* ----------------------- the Windows capture path ------------------------ */
+
+// On Windows the renderer captures system audio through Chromium and hands PCM
+// to the main process, instead of a helper writing framed bytes to stdout.
+// These check that the second path lands in the same segmenter and produces the
+// same transcript, since it cannot be exercised on this machine.
+
+test('renderer PCM produces a transcript through the same pipeline', () => {
+  const { l, lines } = harness();
+  l.startExternal();
+  l.pushExternal(tone(1500));
+  l.pushExternal(quiet(900));
+  return new Promise((resolve) => setImmediate(() => {
+    assert.strictEqual(lines.length, 1, 'renderer audio should transcribe like helper audio');
+    assert.strictEqual(lines[0].who, 'them');
+    l.stop();
+    resolve();
+  }));
+});
+
+test('renderer PCM is ignored until listening starts', () => {
+  const { l, lines } = harness();
+  l.pushExternal(tone(1500));        // no startExternal()
+  l.pushExternal(quiet(900));
+  return new Promise((resolve) => setImmediate(() => {
+    assert.strictEqual(lines.length, 0, 'audio arriving while stopped must be dropped');
+    l.stop();
+    resolve();
+  }));
+});
+
+test('silence from the renderer costs no API call', () => {
+  const { l, got } = harness();
+  l.startExternal();
+  l.pushExternal(quiet(5000));
+  return new Promise((resolve) => setImmediate(() => {
+    assert.strictEqual(got.length, 0);
+    l.stop();
+    resolve();
+  }));
+});
+
+test('stopping and restarting external capture clears stale audio', () => {
+  const { l, lines } = harness();
+  l.startExternal();
+  l.pushExternal(tone(400));         // half an utterance
+  l.stop();
+  l.startExternal();
+  l.pushExternal(tone(1500));
+  l.pushExternal(quiet(900));
+  return new Promise((resolve) => setImmediate(() => {
+    assert.strictEqual(lines.length, 1, 'the fragment from before the stop must not be prepended');
+    l.stop();
+    resolve();
+  }));
+});
