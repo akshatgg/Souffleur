@@ -147,6 +147,24 @@ knows who spoke.
   platform at runtime rather than trusting a build-time assumption, and turns
   amber when protection is not actually in force.
 
+## Releasing
+
+The **git tag decides the version**. Nothing picks it automatically.
+
+```bash
+npm run release:patch    # 0.1.1 -> 0.1.2, bug fixes
+npm run release:minor    # 0.1.1 -> 0.2.0, new features
+npm run release:major    # 0.1.1 -> 1.0.0, breaking changes
+```
+
+Each bumps `package.json`, commits, tags, and pushes both. Pushing the tag
+triggers CI, which builds macOS and Windows on their own runners and publishes
+the installers to a GitHub release.
+
+CI refuses to build if the tag and `package.json` disagree, so a release cannot
+end up containing files named after a different version. The **Run workflow**
+button builds artifacts without publishing — the release step only runs for tags.
+
 ## Tests
 
 ```bash

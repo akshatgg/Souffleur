@@ -15,7 +15,28 @@ permissions:
   contents: write
 
 jobs:
+  # The tag decides the version, but the filenames come from package.json. If
+  # the two disagree you get a release called v0.2.0 containing files named
+  # 0.1.1. Fail before spending ten minutes building the wrong thing.
+  check-version:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag must match package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          echo "tag=$tag  package.json=$pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $pkg."
+            echo "::error::Run: npm version $tag --no-git-tag-version, then commit before tagging."
+            exit 1
+          fi
+
   macos:
+    needs: [check-version]
+    if: always() && (needs.check-version.result == 'success' || needs.check-version.result == 'skipped')
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -54,6 +75,8 @@ jobs:
           path: release/*.dmg
 
   windows:
+    needs: [check-version]
+    if: always() && (needs.check-version.result == 'success' || needs.check-version.result == 'skipped')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
