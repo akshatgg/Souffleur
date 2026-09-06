@@ -11,15 +11,16 @@ There are two ways out. They are independent, and the first is free.
 
 ## Option A — Homebrew (free, macOS only)
 
-Homebrew strips the quarantine flag when it installs a cask, so the dialog never
+The cask clears the quarantine flag after installing, so the dialog never
 appears:
 
 ```bash
 brew install --cask akshatgg/tap/souffleur
 ```
 
-This does not make the app notarised. It means Homebrew removes the flag on the
-user's behalf, which is exactly what the Settings approval does by hand.
+This does not make the app notarised. Note that Homebrew *adds* quarantine to
+casks by default — the cask's `postflight` is what removes it, which is exactly
+what the Settings approval does by hand.
 
 ### One-time setup
 

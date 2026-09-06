@@ -1,8 +1,11 @@
 # Homebrew cask for Souffleur.
 #
-# Homebrew strips the com.apple.quarantine flag when installing a cask, so the
-# "Apple could not verify" dialog never appears. That is the same permission the
-# System Settings button grants, applied on the user's behalf.
+# Homebrew ADDS com.apple.quarantine to casks by default -- it does not remove
+# it. Without the postflight below, a brew install still produces the "Apple
+# could not verify" dialog, exactly like downloading the DMG by hand.
+#
+# The postflight clears the flag, which is the same permission the System
+# Settings approval grants. Users can also pass --no-quarantine themselves.
 #
 # This does NOT make the app notarised. Notarisation needs a paid Developer ID;
 # see docs/SIGNING.md.
@@ -26,9 +29,18 @@ cask "souffleur" do
   desc "Screen-share-invisible AI overlay that reads your screen and hears your calls"
   homepage "https://getsouffleur.vercel.app"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "Souffleur.app"
+
+  # The build is signed but not notarised, so macOS refuses it on first launch
+  # while the quarantine flag is set. Clearing it here is what makes a plain
+  # `brew install --cask` open without a dialog.
+  postflight do
+    system_command "/usr/bin/xattr",
+                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Souffleur.app"],
+                   must_succeed: false
+  end
 
   uninstall quit: "com.akshatgg.souffleur"
 
