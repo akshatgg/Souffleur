@@ -93,12 +93,6 @@ function toggleVisible() {
   else { win.show(); win.focus(); }
 }
 
-function nudge(dx, dy) {
-  if (!win) return;
-  const b = win.getBounds();
-  win.setBounds({ ...b, x: b.x + dx, y: b.y + dy });
-}
-
 const ACTIONS = {
   toggle:     { label: 'Show or hide',      run: () => toggleVisible() },
   screenshot: { label: 'Ask about screen',  run: () => win?.webContents.send('hotkey:ask-with-screenshot') },
@@ -141,6 +135,67 @@ function registerShortcuts() {
 
   if (failed.length) console.warn('[souffleur] ' + failed.join('; '));
   return { bound, failed };
+}
+
+/* -------------------------------- listening -------------------------------- */
+
+function transcribeModelFor(s) {
+  return s.transcribeModel || defaultTranscribeModel(s.provider, lastModelList[s.provider]);
+}
+
+function ensureListener() {
+  if (listener) return listener;
+
+  listener = new Listener(async (wav) => {
+    const s = store.getSettings();
+    return transcribe({
+      provider: s.provider,
+      apiKey: store.getKey(s.provider),
+      model: transcribeModelFor(s),
+      baseUrl: s.baseUrl,
+      wav,
+    });
+  });
+
+  const toRenderer = (ch) => (payload) => {
+    if (win && !win.isDestroyed()) win.webContents.send(ch, payload);
+  };
+
+  listener.on('transcript', ({ who, text }) => {
+    transcript.push({ t: Date.now(), who, text });
+    while (transcript.length > TRANSCRIPT_KEEP) transcript.shift();
+    toRenderer('listen:transcript')({ who, text });
+  });
+  listener.on('hint', toRenderer('listen:hint'));
+  listener.on('state', toRenderer('listen:state'));
+  listener.on('speaking', toRenderer('listen:speaking'));
+  listener.on('error', toRenderer('listen:error'));
+  listener.on('log', (m) => console.log('[audiotap]', m));
+
+  return listener;
+}
+
+/**
+ * Interview mode answers *as* the person described by the uploaded documents.
+ * It falls back to the plain assistant prompt when no document has been added,
+ * so turning the toggle on before uploading anything cannot produce a persona
+ * with no history to stand on.
+ */
+function systemPrompt(s) {
+  if (s.interviewMode) {
+    const p = persona.interviewPrompt(s.personaName);
+    if (p) return p;
+  }
+  return s.system;
+}
+
+/** Recent speech, folded into the system prompt so answers have context. */
+function transcriptContext() {
+  if (!transcript.length) return '';
+  const recent = transcript.slice(-12)
+    .map((x) => `${x.who === 'you' ? 'Me' : 'Them'}: ${x.text}`).join('\n');
+  return '\n\nLive transcript of the call, oldest first. "Them" is the other ' +
+         'party, "Me" is the user. Use it as context; do not repeat it back:\n' + recent;
 }
 
 /* ---------------------------------- IPC ----------------------------------- */

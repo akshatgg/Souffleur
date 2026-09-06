@@ -4,7 +4,7 @@
   "description": "A hidden prompter for calls: sees your screen, hears the room, invisible to screen share",
   "main": "src/main/main.js",
   "scripts": {
-    "test": "node --test test/sse.test.js test/listen.test.js",
+    "test": "eslint . && node --test test/sse.test.js test/listen.test.js",
     "start": "electron .",
     "dev": "electron . --enable-logging",
     "debug": "SOUFFLEUR_DEBUG=1 electron .",
@@ -16,7 +16,8 @@
     "release:patch": "npm version patch && git push --follow-tags",
     "release:minor": "npm version minor && git push --follow-tags",
     "release:major": "npm version major && git push --follow-tags",
-    "cask:update": "node packaging/update-cask.mjs"
+    "cask:update": "node packaging/update-cask.mjs",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "akshatgg",
@@ -24,7 +25,8 @@
   "type": "commonjs",
   "devDependencies": {
     "electron": "^44.2.0",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.10.0"
   },
   "dependencies": {
     "pdfjs-dist": "^6.3.289"
