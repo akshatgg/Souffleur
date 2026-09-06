@@ -1,6 +1,6 @@
 {
   "name": "souffleur",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A hidden prompter for calls: sees your screen, hears the room, invisible to screen share",
   "main": "src/main/main.js",
   "scripts": {
@@ -10,9 +10,9 @@
     "debug": "SOUFFLEUR_DEBUG=1 electron .",
     "build:audio": "mkdir -p bin && swiftc -O src/native/AudioTap.swift -o bin/audiotap",
     "build:native": "mkdir -p bin && swiftc -O src/native/AudioTap.swift -o bin/audiotap && swiftc -O src/native/PdfText.swift -o bin/pdftext",
-    "dist:mac": "npm run build:native && electron-builder --mac",
-    "dist:win": "electron-builder --win",
-    "dist": "electron-builder -mw"
+    "dist:mac": "npm run build:native && electron-builder --mac --config electron-builder.config.js",
+    "dist:win": "electron-builder --win --config electron-builder.config.js",
+    "dist": "electron-builder -mw --config electron-builder.config.js"
   },
   "keywords": [],
   "author": "akshatgg",
@@ -21,88 +21,5 @@
   "devDependencies": {
     "electron": "^44.2.0",
     "electron-builder": "^26.15.3"
-  },
-  "build": {
-    "appId": "com.akshatgg.souffleur",
-    "productName": "Souffleur",
-    "copyright": "Copyright (c) 2026 akshatgg",
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "src/**/*",
-      "package.json",
-      "!**/*.map"
-    ],
-    "mac": {
-      "category": "public.app-category.productivity",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        }
-      ],
-      "icon": "build/icon.png",
-      "identity": null,
-      "extendInfo": {
-        "LSUIElement": true,
-        "NSMicrophoneUsageDescription": "Souffleur transcribes your own voice only when you turn on microphone capture.",
-        "NSCameraUsageDescription": "Not used."
-      },
-      "extraResources": [
-        {
-          "from": "bin",
-          "to": "bin",
-          "filter": [
-            "**/*"
-          ]
-        }
-      ]
-    },
-    "dmg": {
-      "title": "Souffleur ${version}",
-      "contents": [
-        {
-          "x": 140,
-          "y": 200,
-          "type": "file"
-        },
-        {
-          "x": 400,
-          "y": 200,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ]
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "build/icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Souffleur"
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "category": "Utility",
-      "icon": "build/icon.png"
-    }
   }
 }

@@ -86,16 +86,18 @@ jobs:
             ## Install
 
             **macOS** — download the `.dmg` for your chip (`arm64` for Apple
-            Silicon, the other for Intel), drag Souffleur to Applications.
+            Silicon, the other for Intel) and drag Souffleur to Applications.
 
-            The build is not notarised, so on first launch macOS will say it
-            cannot check the app for malicious software. **Right-click the app
-            and choose Open**, then confirm. You only do this once.
+            The build is signed, but not by a certificate Apple recognises, so
+            macOS warns once. **Right-click the app and choose Open**, then Open
+            again. If it still refuses: System Settings → Privacy & Security →
+            **Open Anyway**.
 
             Then grant **Screen Recording** in System Settings → Privacy &
-            Security. Without it the overlay works but cannot see your screen
-            or hear the call.
+            Security. Without it the overlay runs but cannot see your screen or
+            hear the call.
 
-            **Windows** — run the `.exe` installer.
+            **Windows** — run the `.exe`. SmartScreen will say it protected your
+            PC; click **More info → Run anyway**.
 
             Audio capture is macOS-only for now.

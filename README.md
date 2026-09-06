@@ -65,9 +65,16 @@ Download the [latest release](https://github.com/akshatgg/Souffleur/releases/lat
 a `.dmg` for macOS (`arm64` for Apple Silicon, the other for Intel) or the `.exe`
 installer for Windows.
 
-The macOS build is not notarised, so Gatekeeper will refuse it on a double-click.
-**Right-click the app and choose Open**, confirm once. Then grant Screen Recording
-in System Settings, or the overlay can neither see your screen nor hear the call.
+Neither build is signed by a certificate the vendor recognises, so each warns
+once. On macOS, **right-click the app and choose Open** (or System Settings →
+Privacy & Security → Open Anyway). On Windows, **More info → Run anyway**.
+
+Then grant Screen Recording on macOS, or the overlay can neither see your screen
+nor hear the call.
+
+If macOS says the app is *damaged* rather than unverified, you have a build from
+before 0.1.1; download a newer one, or clear the flag with
+`xattr -dr com.apple.quarantine /Applications/Souffleur.app`.
 
 Audio capture is macOS-only for now.
 
