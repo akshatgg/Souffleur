@@ -700,7 +700,6 @@ td:first-child { white-space: nowrap; width: 1%; padding-right: 22px; }
 .cmp th:nth-child(2) { color: var(--gold); font-size: 13px; }
 .cmp th:nth-child(3) { color: var(--ink-dim); font-size: 13px; }
 .cmp td { width: auto; white-space: normal; }
-.cmp td:first-child { color: var(--ink); width: 22%; min-width: 165px; padding-right: 26px; }
 .cmp td:nth-child(2), .cmp td:nth-child(3) { width: 34%; }
 .cmp td.yes { color: var(--ink); }
 .cmp td.yes::before { content: '✓ '; color: var(--gold); }
@@ -708,4 +707,28 @@ td:first-child { white-space: nowrap; width: 1%; padding-right: 22px; }
 
 @media (max-width: 620px) {
   .faq { padding: 60px 22px; }
+}
+
+/* Row headers in the comparison table are content, not the small grey column
+   labels the global `th` rule is written for. They are `th` so that a screen
+   reader announces what each "Yes" refers to. */
+.cmp th[scope="row"] {
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 400;
+  letter-spacing: 0;
+  width: 22%;
+  min-width: 165px;
+  padding-right: 26px;
+}
+
+/* Visually hidden, still read aloud — for the empty corner cell of a table
+   that needs a header there for structure but has nothing to show. */
+.vh {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
 }
