@@ -34,11 +34,18 @@ async function wireDownloads() {
   const mine = isWin ? 'dl-win' : isMac ? (appleSilicon ? 'dl-mac-arm' : 'dl-mac-intel') : null;
   if (mine) document.getElementById(mine)?.classList.add('is-yours');
 
+  // The hero button downloads the right file rather than scrolling to a list.
+  // Anyone who lands here and clicks the big button wants the app, not a menu.
   const label = document.querySelector('[data-os-label]');
   if (label) {
     label.textContent = isWin ? 'Download for Windows'
-      : isMac ? 'Download for macOS'
+      : isMac ? (appleSilicon ? 'Download for Mac (Apple Silicon)' : 'Download for Mac (Intel)')
       : 'Download';
+    const target = mine && document.getElementById(mine);
+    if (target) {
+      label.href = target.href;
+      label.setAttribute('download', '');
+    }
   }
 
   try {
@@ -52,8 +59,13 @@ async function wireDownloads() {
       'dl-mac-intel': find(/^(?!.*arm64).*\.dmg$/i),
       'dl-win': find(/\.exe$/i),
     };
+    // Only ever replace a baked-in URL with a newer one. If the API is rate
+    // limited or the shape changes, the hrefs already in the HTML still point
+    // at real files, so a click always downloads something that works.
     for (const [id, url] of Object.entries(map)) {
-      if (url) document.getElementById(id)?.setAttribute('href', url);
+      if (!url) continue;
+      document.getElementById(id)?.setAttribute('href', url);
+      if (id === mine && label) label.href = url;
     }
     const v = document.querySelectorAll('[data-version]');
     v.forEach((el) => { el.textContent = rel.tag_name || ''; });
