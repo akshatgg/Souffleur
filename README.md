@@ -65,6 +65,16 @@ Download the [latest release](https://github.com/akshatgg/Souffleur/releases/lat
 a `.dmg` for macOS (`arm64` for Apple Silicon, the other for Intel) or the `.exe`
 installer for Windows.
 
+### Homebrew, if you have it
+
+```bash
+brew install --cask akshatgg/tap/souffleur
+```
+
+Homebrew removes the download flag as it installs, so no warning appears.
+
+### Otherwise
+
 Neither build is signed by a certificate the vendor recognises, so each warns
 once.
 
@@ -89,6 +99,10 @@ If macOS says the app is *damaged* rather than unverified, that is a build from
 before 0.1.1; download a newer one.
 
 Audio capture is macOS-only for now.
+
+Removing the warning for everyone needs a paid certificate on each platform.
+The build pipeline is already wired for both — see
+[docs/SIGNING.md](docs/SIGNING.md); it is credentials, not code.
 
 ## Requirements
 
