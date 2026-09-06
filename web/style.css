@@ -60,13 +60,17 @@ a { color: inherit; }
   letter-spacing: -0.01em;
   text-decoration: none;
 }
-/* The mark: the prompter's dome, drawn rather than loaded. */
+/* The mark: the prompter's dome, drawn rather than loaded.
+   The glow uses drop-shadow, not box-shadow. box-shadow follows the element's
+   BOX, so a blurred halo on a 20x12 rectangle paints a visible rectangle around
+   an arc that has no bottom edge. drop-shadow follows the painted pixels. */
 .mark {
-  width: 20px; height: 12px;
-  border: 1.8px solid var(--gold);
+  width: 22px;
+  height: 13px;
+  border: 1.9px solid var(--gold);
   border-bottom: 0;
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 0 14px rgba(242, 200, 120, 0.35);
+  border-radius: 22px 22px 0 0;
+  filter: drop-shadow(0 0 4px rgba(242, 200, 120, 0.55));
 }
 .nav-links { display: flex; align-items: center; gap: 22px; font-size: 14px; }
 .nav-links a { color: var(--ink-dim); text-decoration: none; }
