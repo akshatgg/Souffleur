@@ -248,12 +248,20 @@ textarea.autofilled { color: var(--ink-dim); }
 
 .hints {
   display: flex;
-  gap: 12px;
-  margin-top: 6px;
+  flex-wrap: wrap;      /* spelled-out keys are wider than the old glyphs */
+  gap: 3px 11px;
+  margin-top: 7px;
   font-size: 10px;
   color: var(--ink-faint);
 }
 .hints span { white-space: nowrap; }
+.hints kbd {
+  font-family: inherit;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0 3px;
+  color: var(--ink-dim);
+}
 
 /* ---- settings ---- */
 

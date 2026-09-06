@@ -137,8 +137,8 @@ function clearChat() {
   conversation = [];
   window.souffleur.abort();
   logEl.innerHTML =
-    '<div class="empty" id="empty">Cleared. Ask anything, or press <kbd>' +
-    '⌘⇧⏎</kbd> to ask about your screen.</div>';
+    '<div class="empty" id="empty">Cleared. Ask anything, or press ' +
+    '<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> to ask about your screen.</div>';
 }
 
 /* -------------------------------- settings -------------------------------- */
@@ -484,7 +484,7 @@ function paintListening(on) {
 async function answerLast() {
   const heard = await window.souffleur.lastHeard();
   if (!heard) {
-    addTurn('error', 'Nothing heard yet. Press \u2318\u21e7L to start listening.');
+    addTurn('error', 'Nothing heard yet. Press Shift+Z to start listening.');
     return;
   }
   sealHeard();
