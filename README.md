@@ -84,7 +84,12 @@ SmartScreen warns once: **More info → Run anyway**.
 ### After installing
 
 Grant **Screen Recording** on macOS, or the overlay can neither see your screen
-nor hear the call. Audio capture is macOS-only for now.
+nor hear the call.
+
+**Two features are macOS-only:** hearing the call (ScreenCaptureKit) and reading
+PDFs for interview mode (PDFKit). Both are Swift helpers with no Windows
+equivalent yet, so the controls are disabled there rather than failing when
+pressed. The overlay, screenshots and chat work on both.
 
 Removing the warnings for everyone needs paid certificates on each platform. The
 pipeline is already wired for both — see [docs/SIGNING.md](docs/SIGNING.md); it

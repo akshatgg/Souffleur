@@ -595,6 +595,22 @@ window.souffleur.onClear(clearChat);
     $('keyNote').after(n);
   }
 
+  // Grey out what this platform cannot do, with the reason on the control.
+  const caps = b.capabilities || { audio: true, pdf: true };
+  if (!caps.audio) {
+    const btn = $('btnListen');
+    btn.disabled = true;
+    btn.title = 'Hearing the call is macOS-only for now';
+    btn.style.opacity = '0.35';
+  }
+  if (!caps.pdf) {
+    const add = $('btnAddDoc');
+    add.disabled = true;
+    add.textContent = 'Reading PDFs is macOS-only for now';
+    $('btnInterview').disabled = true;
+    $('btnInterview').style.opacity = '0.35';
+  }
+
   docs = b.docs || [];
   maxDocs = b.maxDocs || 4;
   $('personaName').value = settings.personaName || '';

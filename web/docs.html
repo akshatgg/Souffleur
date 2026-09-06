@@ -82,7 +82,13 @@
     Click <strong>More info</strong>, then <strong>Run anyway</strong>.
   </p>
 </div>
-<p>The overlay, screenshots and chat all work. Call audio does not yet — that part is macOS-only.</p>
+<p>
+  The hidden overlay, screenshots and chat all work. <strong>Two things do not yet:</strong>
+  hearing the call, and reading PDFs for interview mode. Both use native macOS
+  frameworks — ScreenCaptureKit for audio, PDFKit for documents — and have no
+  Windows equivalent in the app today. The controls are disabled rather than
+  failing when you press them.
+</p>
 
 <h3>From source</h3>
 <pre><code>git clone https://github.com/akshatgg/Souffleur.git
@@ -195,6 +201,7 @@ npm start</code></pre>
   Add up to <strong>four PDFs</strong> describing you — CV, portfolio, work history — and
   Souffleur answers in the first person as you, from your real background.
 </p>
+<p><strong>macOS only for now</strong> — PDF reading uses PDFKit, so the control is disabled on Windows.</p>
 <ol>
   <li>Settings → <strong>Documents about you</strong> → <strong>Add PDF</strong></li>
   <li>Turn on <strong>Interview mode</strong></li>

@@ -174,7 +174,12 @@ class Listener extends EventEmitter {
 
     const bin = helperPath();
     if (!fs.existsSync(bin)) {
-      return { ok: false, error: `Audio helper missing at ${bin}. Run: npm run build:audio` };
+      return {
+        ok: false,
+        error: process.platform === 'darwin'
+          ? `Audio helper missing from this build. Reinstall, or run: npm run build:audio`
+          : 'Hearing the call is macOS-only for now. Everything else works here.',
+      };
     }
 
     const args = [];

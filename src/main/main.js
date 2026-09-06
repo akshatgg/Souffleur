@@ -156,6 +156,12 @@ ipcMain.handle('bootstrap', () => ({
   keyStorage: store.keyStorageMode(),
   stealth: stealthStatus(),
   platform: process.platform,
+  // Both native helpers are Swift, so audio capture and PDF import exist only
+  // in macOS builds. The UI disables rather than silently failing.
+  capabilities: {
+    audio: process.platform === 'darwin',
+    pdf: process.platform === 'darwin',
+  },
 }));
 
 ipcMain.handle('settings:set', (_e, patch) => {

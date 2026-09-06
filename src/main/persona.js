@@ -45,7 +45,15 @@ function extract(file) {
   return new Promise((resolve) => {
     const bin = helperPath();
     if (!fs.existsSync(bin)) {
-      return resolve({ ok: false, error: 'PDF helper missing. Run: npm run build:native' });
+      // The extractor is Swift, so it only exists in macOS builds. Tell the
+      // user that, rather than handing them a build command for a helper that
+      // cannot be built on their machine.
+      return resolve({
+        ok: false,
+        error: process.platform === 'darwin'
+          ? 'PDF reader missing from this build. Reinstall, or run: npm run build:native'
+          : 'Reading PDFs is macOS-only for now, so interview mode cannot load your documents here.',
+      });
     }
     execFile(bin, [file], { maxBuffer: 64 * 1024 * 1024 }, (err, stdout) => {
       if (err && !stdout) return resolve({ ok: false, error: err.message });
