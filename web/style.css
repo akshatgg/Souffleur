@@ -356,16 +356,15 @@ h2 {
   margin: 130px auto 0;
   padding: 0 24px;
 }
-/* macOS is a command, Windows is a file. They are different shapes of thing,
-   so they get different shapes on the page rather than three identical cards. */
+/* macOS is a pair of commands, Windows is one file. Stacked rather than side
+   by side: in two columns the Windows card was squeezed into a narrow strip
+   with its text wrapping every few words, while the macOS commands needed the
+   full width to stay on one line. */
 .dl-split {
   display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  gap: 16px;
+  gap: 14px;
   margin-top: 32px;
-  align-items: start;
 }
-@media (max-width: 760px) { .dl-split { grid-template-columns: 1fr; } }
 
 .dl-mac {
   padding: 20px;
@@ -438,8 +437,40 @@ h2 {
 .dl-alt { font-size: 12px; color: var(--ink-faint); margin-top: 10px; }
 .dl-alt a { color: var(--ink-dim); }
 
-.dl-win { align-content: start; }
-.dl-why-win { font-size: 12px; color: var(--ink-faint); margin-top: 10px; }
+.dl-win {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 20px;
+  align-items: center;
+  padding: 18px 20px;
+}
+.win-main { display: grid; gap: 3px; }
+.win-cta {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  background: var(--gold);
+  color: var(--ground);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 9px 20px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.dl-win:hover .win-cta { background: #f7d79a; }
+.dl-why-win {
+  grid-column: 1;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  margin-top: 7px;
+  max-width: 70ch;
+}
+.dl-why-win strong { color: var(--ink-dim); font-weight: 600; }
+
+@media (max-width: 620px) {
+  .dl-win { grid-template-columns: 1fr; }
+  .win-cta { grid-column: 1; grid-row: auto; justify-self: start; margin-top: 10px; }
+}
 
 .dl-grid {
   display: grid;
