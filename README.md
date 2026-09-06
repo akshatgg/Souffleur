@@ -61,48 +61,34 @@ itself, and there is no hide/capture/show flicker.
 
 ## Install
 
-Download the [latest release](https://github.com/akshatgg/Souffleur/releases/latest):
-a `.dmg` for macOS (`arm64` for Apple Silicon, the other for Intel) or the `.exe`
-installer for Windows.
-
-### Homebrew, if you have it
+### macOS
 
 ```bash
 brew install --cask akshatgg/tap/souffleur
 ```
 
-Homebrew removes the download flag as it installs, so no warning appears.
+Installs and opens with nothing to click through.
 
-### Otherwise
+The disk image on the releases page works too, but the build is not notarised
+by Apple, so a manually downloaded copy is refused with *"Apple could not verify
+Souffleur"* until you approve it in **System Settings → Privacy & Security →
+Open Anyway**. Homebrew clears that flag as it installs, which is why the
+command is the recommended route.
 
-Neither build is signed by a certificate the vendor recognises, so each warns
-once.
+### Windows
 
-**macOS.** Opening the app shows *"Apple could not verify Souffleur is free of
-malware"*, with only **Done** and **Move to Bin** — it looks like a dead end but
-is not. Click Done, then open **System Settings → Privacy & Security**, scroll to
-the bottom and click **Open Anyway**. Right-click → Open worked on older macOS
-and no longer does on 15+.
+Download the `.exe` from the
+[latest release](https://github.com/akshatgg/Souffleur/releases/latest).
+SmartScreen warns once: **More info → Run anyway**.
 
-Or clear the flag directly:
+### After installing
 
-```bash
-xattr -dr com.apple.quarantine /Applications/Souffleur.app
-```
+Grant **Screen Recording** on macOS, or the overlay can neither see your screen
+nor hear the call. Audio capture is macOS-only for now.
 
-**Windows.** SmartScreen: **More info → Run anyway**.
-
-Then grant Screen Recording on macOS, or the overlay can neither see your screen
-nor hear the call.
-
-If macOS says the app is *damaged* rather than unverified, that is a build from
-before 0.1.1; download a newer one.
-
-Audio capture is macOS-only for now.
-
-Removing the warning for everyone needs a paid certificate on each platform.
-The build pipeline is already wired for both — see
-[docs/SIGNING.md](docs/SIGNING.md); it is credentials, not code.
+Removing the warnings for everyone needs paid certificates on each platform. The
+pipeline is already wired for both — see [docs/SIGNING.md](docs/SIGNING.md); it
+is credentials, not code.
 
 ## Requirements
 

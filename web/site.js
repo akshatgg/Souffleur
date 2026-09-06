@@ -6,9 +6,13 @@ const LATEST = `${REPO}/releases/latest`;
 /* ------------------------------ downloads ------------------------------- */
 
 /**
- * Point each card at a real asset in the newest release, and highlight the one
- * matching the visitor's machine. If the API is unreachable or no release
- * exists yet, the cards keep their /releases/latest hrefs, which always works.
+ * macOS installs through Homebrew, Windows downloads a file.
+ *
+ * The macOS disk image is deliberately not offered here. It is not notarised,
+ * so opening it means approving the app by hand in System Settings, and a
+ * download button that leads to a security dialog is a worse first experience
+ * than a command that just works. The DMG is still on the releases page for
+ * anyone who wants it.
  */
 async function wireDownloads() {
   const ua = navigator.userAgent;
@@ -16,61 +20,49 @@ async function wireDownloads() {
   const isMac = /Mac/i.test(platform) || /Mac OS X/i.test(ua);
   const isWin = /Win/i.test(platform) || /Windows/i.test(ua);
 
-  // Apple Silicon cannot be read directly; the WebGL renderer string is the
-  // usual tell, and guessing wrong only mislabels a highlight.
-  let appleSilicon = false;
-  if (isMac) {
-    try {
-      const gl = document.createElement('canvas').getContext('webgl');
-      const info = gl && gl.getExtension('WEBGL_debug_renderer_info');
-      const renderer = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : '';
-      appleSilicon = /Apple/i.test(renderer) && !/Intel/i.test(renderer);
-    } catch { /* leave it false */ }
-    if (navigator.userAgentData?.platform === 'macOS' && navigator.maxTouchPoints > 1) {
-      appleSilicon = true;
-    }
-  }
-
-  const mine = isWin ? 'dl-win' : isMac ? (appleSilicon ? 'dl-mac-arm' : 'dl-mac-intel') : null;
-  if (mine) document.getElementById(mine)?.classList.add('is-yours');
-
-  // The hero button downloads the right file rather than scrolling to a list.
-  // Anyone who lands here and clicks the big button wants the app, not a menu.
   const label = document.querySelector('[data-os-label]');
   if (label) {
     label.textContent = isWin ? 'Download for Windows'
-      : isMac ? (appleSilicon ? 'Download for Mac (Apple Silicon)' : 'Download for Mac (Intel)')
+      : isMac ? 'Install on macOS'
       : 'Download';
-    const target = mine && document.getElementById(mine);
-    if (target) {
-      label.href = target.href;
-      label.setAttribute('download', '');
-    }
+  }
+  if (isWin) document.getElementById('dl-win')?.classList.add('is-yours');
+  if (isMac) document.querySelector('.dl-mac')?.classList.add('is-yours');
+
+  // Copy the command rather than making people select it by hand.
+  const btn = document.getElementById('brewCmd');
+  const flag = document.getElementById('brewCopy');
+  if (btn && flag) {
+    btn.addEventListener('click', async () => {
+      const text = btn.querySelector('code').textContent.trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        flag.textContent = 'Copied';
+      } catch {
+        // Clipboard access can be refused; selecting the text still helps.
+        const r = document.createRange();
+        r.selectNodeContents(btn.querySelector('code'));
+        const sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+        flag.textContent = 'Select and copy';
+      }
+      setTimeout(() => { flag.textContent = 'Copy'; }, 1800);
+    });
   }
 
+  // Keep the Windows link pointing at the newest installer.
   try {
     const res = await fetch('https://api.github.com/repos/akshatgg/Souffleur/releases/latest');
     if (!res.ok) return;
     const rel = await res.json();
-    const find = (re) => (rel.assets || []).find((a) => re.test(a.name))?.browser_download_url;
-
-    const map = {
-      'dl-mac-arm': find(/arm64.*\.dmg$/i),
-      'dl-mac-intel': find(/^(?!.*arm64).*\.dmg$/i),
-      'dl-win': find(/\.exe$/i),
-    };
-    // Only ever replace a baked-in URL with a newer one. If the API is rate
-    // limited or the shape changes, the hrefs already in the HTML still point
-    // at real files, so a click always downloads something that works.
-    for (const [id, url] of Object.entries(map)) {
-      if (!url) continue;
-      document.getElementById(id)?.setAttribute('href', url);
-      if (id === mine && label) label.href = url;
-    }
-    const v = document.querySelectorAll('[data-version]');
-    v.forEach((el) => { el.textContent = rel.tag_name || ''; });
+    const exe = (rel.assets || []).find((a) => /\.exe$/i.test(a.name));
+    if (exe) document.getElementById('dl-win')?.setAttribute('href', exe.browser_download_url);
+    document.querySelectorAll('[data-version]').forEach((el) => {
+      el.textContent = rel.tag_name || el.textContent;
+    });
   } catch {
-    /* offline or rate limited: the /releases/latest links still resolve */
+    /* offline or rate limited: the baked-in link still resolves */
   }
 }
 

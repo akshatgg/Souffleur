@@ -205,22 +205,19 @@ jobs:
           body: |
             ## Install
 
-            **macOS** — download the `.dmg` for your chip (`arm64` for Apple
-            Silicon, the other for Intel) and drag Souffleur to Applications.
+            **macOS**
 
-            macOS will say *"Apple could not verify Souffleur"*, offering only
-            **Done** and **Move to Bin**. That is not a dead end: click **Done**,
-            then open **System Settings → Privacy & Security**, scroll to the
-            bottom, and click **Open Anyway**. Once only.
+            ```
+            brew install --cask akshatgg/tap/souffleur
+            ```
 
-            Or clear the flag directly:
-            `xattr -dr com.apple.quarantine /Applications/Souffleur.app`
+            Installs and opens with nothing to click through. The `.dmg` below
+            works too, but the build is not notarised, so a manually downloaded
+            copy is refused until you approve it in System Settings → Privacy &
+            Security → **Open Anyway**.
 
-            Then grant **Screen Recording** in System Settings → Privacy &
-            Security. Without it the overlay runs but cannot see your screen or
-            hear the call.
+            **Windows** — run the `.exe`. SmartScreen warns once: **More info →
+            Run anyway**.
 
-            **Windows** — run the `.exe`. SmartScreen will say it protected your
-            PC; click **More info → Run anyway**.
-
-            Audio capture is macOS-only for now.
+            Then grant **Screen Recording** on macOS, or the overlay cannot see
+            your screen or hear the call. Audio capture is macOS-only for now.

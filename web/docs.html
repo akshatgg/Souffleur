@@ -35,46 +35,35 @@
 
 <h2>Install</h2>
 
-<h3>macOS</h3>
-<ol>
-  <li>Download the <code>.dmg</code> — <strong>arm64</strong> for Apple Silicon (M1 and newer), the other for Intel.</li>
-  <li>Open it and drag <strong>Souffleur</strong> into Applications.</li>
-  <li>Open Souffleur. macOS will say <em>“Apple could not verify Souffleur is free of malware.”</em> Click <strong>Done</strong>.</li>
-  <li>Go to <strong>System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security</strong>, scroll to the bottom, and click <strong>Open Anyway</strong> next to Souffleur.</li>
-  <li>Confirm, and it opens. You only do this once.</li>
-</ol>
+<h3>macOS — use Homebrew</h3>
+<pre><code>brew install --cask akshatgg/tap/souffleur</code></pre>
+<p>Installs and opens with nothing to click through. No Homebrew? <a href="https://brew.sh">Install it first</a> — one line.</p>
 
 <div class="callout">
   <p>
-    <strong>Do not stop at the first dialog.</strong> It offers only “Done” and
-    “Move to Bin”, so it looks like a dead end. The approval lives in System
-    Settings, and the button appears there only after you have tried to open the
-    app at least once.
-  </p>
-  <p>
-    Right-clicking the app and choosing Open used to work; on macOS&nbsp;15 and
-    later it does not, which is why the steps above go through Settings.
+    <strong>Do not download the disk image if you can avoid it.</strong> The build is
+    signed but not notarised by Apple, so macOS refuses a manually downloaded
+    copy with <em>“Apple could not verify Souffleur is free of malware”</em> and
+    offers only Done and Move to Bin. Homebrew clears the download flag as part
+    of installing, which is why the command has no such step.
   </p>
 </div>
 
-<h3>Or install with Homebrew, and skip all of that</h3>
-<pre><code>brew install --cask akshatgg/tap/souffleur</code></pre>
+<h4>If you really want the disk image</h4>
 <p>
-  The app installs and opens with nothing to click through. Homebrew actually
-  quarantines casks by default; the cask clears the flag after installing, which
-  is the same permission the Settings approval grants.
+  It is on the <a href="https://github.com/akshatgg/Souffleur/releases/latest">releases page</a>.
+  After dragging the app to Applications you have to approve it once:
 </p>
-
-<h3>The one-line alternative</h3>
-<p>If you would rather not click through Settings, clear the download flag directly:</p>
+<ol>
+  <li>Open Souffleur. macOS says it cannot verify it — click <strong>Done</strong>.</li>
+  <li><strong>System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security</strong>, scroll to the bottom, click <strong>Open Anyway</strong>.</li>
+</ol>
+<p>Or clear the flag yourself:</p>
 <pre><code>xattr -dr com.apple.quarantine /Applications/Souffleur.app</code></pre>
-<p>Then open the app normally. This is the same permission the Settings button grants.</p>
-
-<h3>If it says “Souffleur is damaged”</h3>
 <p>
-  That is a different message, and it means you have a build from before
-  <strong>0.1.1</strong>, which shipped with a broken signature.
-  <strong>Download 0.1.1 or later.</strong>
+  Right-click → Open used to work for this and no longer does on macOS 15 and
+  later. Notarisation would remove the step entirely — see
+  <a href="https://github.com/akshatgg/Souffleur/blob/master/docs/SIGNING.md">SIGNING.md</a>.
 </p>
 
 <p>Then grant one permission:</p>
