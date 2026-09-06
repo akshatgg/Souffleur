@@ -193,6 +193,7 @@ jobs:
           git push -f origin "v$v"
 
       - name: Publish release
+        id: publish
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.prepare.outputs.version }}
@@ -227,3 +228,23 @@ jobs:
 
             Then grant **Screen Recording** on macOS, or the overlay cannot see
             your screen or hear the call. Audio capture is macOS-only for now.
+
+      # The site's download links are baked into the HTML so a click works even
+      # when the GitHub API is slow. That means they go stale unless something
+      # updates them -- and they did, serving 0.1.2 for two releases while the
+      # Homebrew cask was current. Doing it here makes drift impossible.
+      - name: Point the site at this release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          npm run site:update
+          if git diff --quiet -- web/; then
+            echo "site already current"
+          else
+            git config user.name  "akshatgg"
+            git config user.email "akshatgg@users.noreply.github.com"
+            git add web/
+            git commit -m "Point downloads at ${{ needs.prepare.outputs.version }}"
+            git push origin master
+          fi
