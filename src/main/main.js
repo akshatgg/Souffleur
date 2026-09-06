@@ -99,120 +99,48 @@ function nudge(dx, dy) {
   win.setBounds({ ...b, x: b.x + dx, y: b.y + dy });
 }
 
-let listenAccel = null;
+const ACTIONS = {
+  toggle:     { label: 'Show or hide',      run: () => toggleVisible() },
+  screenshot: { label: 'Ask about screen',  run: () => win?.webContents.send('hotkey:ask-with-screenshot') },
+  listen:     { label: 'Listen to the call', run: () => win?.webContents.send('hotkey:toggle-listen') },
+  answer:     { label: 'Answer that',       run: () => win?.webContents.send('hotkey:answer-last') },
+  clear:      { label: 'Clear',             run: () => win?.webContents.send('hotkey:clear') },
+};
 
-/** (Re)bind the listen toggle, reporting whether the accelerator was accepted. */
-function registerListenHotkey(bind) {
-  const wanted = (store.getSettings().listenHotkey || '').trim();
-  if (listenAccel) {
-    try { globalShortcut.unregister(listenAccel); } catch { /* already gone */ }
-    listenAccel = null;
-  }
-  if (!wanted) return { ok: true, bound: null };
-
-  const fire = () => win?.webContents.send('hotkey:toggle-listen');
-  const ok = bind ? bind(wanted, fire) : (() => {
-    try { return globalShortcut.register(wanted, fire); } catch { return false; }
-  })();
-
-  if (ok) listenAccel = wanted;
-  return { ok: Boolean(ok), bound: ok ? wanted : null };
-}
-
-function registerShortcuts() {
-  const mod = process.platform === 'darwin' ? 'Command' : 'Control';
-  // One unregistrable accelerator must not take the rest down with it: an
-  // invalid token throws, and a combination already owned by another app just
-  // returns false. Either way, keep going and report it.
-  const bind = (accel, fn) => {
-    try {
-      const ok = globalShortcut.register(accel, fn);
-      if (!ok) console.warn(`[souffleur] shortcut unavailable (taken by another app): ${accel}`);
-      return ok;
-    } catch (err) {
-      console.warn(`[souffleur] shortcut rejected: ${accel} - ${err.message}`);
-      return false;
-    }
-  };
-
-  bind(`${mod}+Shift+Space`, toggleVisible);
-  bind(`${mod}+Shift+Return`, () => win?.webContents.send('hotkey:ask-with-screenshot'));
-  bind(`${mod}+Shift+K`, () => win?.webContents.send('hotkey:clear'));
-
-  // The listen toggle is user-configurable because a global accelerator is a
-  // system-wide grab: bind it to a bare letter and that letter stops working
-  // everywhere else. Shift+Z is the default because it was asked for, not
-  // because it is safe.
-  registerListenHotkey(bind);
-  bind(`${mod}+Shift+L`, () => win?.webContents.send('hotkey:toggle-listen'));
-  bind(`${mod}+Shift+A`, () => win?.webContents.send('hotkey:answer-last'));
-
-  const STEP = 40;
-  bind(`${mod}+Shift+Up`, () => nudge(0, -STEP));
-  bind(`${mod}+Shift+Down`, () => nudge(0, STEP));
-  bind(`${mod}+Shift+Left`, () => nudge(-STEP, 0));
-  bind(`${mod}+Shift+Right`, () => nudge(STEP, 0));
-}
-
-/* -------------------------------- listening -------------------------------- */
-
-function transcribeModelFor(s) {
-  return s.transcribeModel || defaultTranscribeModel(s.provider, lastModelList[s.provider]);
-}
-
-function ensureListener() {
-  if (listener) return listener;
-
-  listener = new Listener(async (wav) => {
-    const s = store.getSettings();
-    return transcribe({
-      provider: s.provider,
-      apiKey: store.getKey(s.provider),
-      model: transcribeModelFor(s),
-      baseUrl: s.baseUrl,
-      wav,
-    });
-  });
-
-  const toRenderer = (ch) => (payload) => {
-    if (win && !win.isDestroyed()) win.webContents.send(ch, payload);
-  };
-
-  listener.on('transcript', ({ who, text }) => {
-    transcript.push({ t: Date.now(), who, text });
-    while (transcript.length > TRANSCRIPT_KEEP) transcript.shift();
-    toRenderer('listen:transcript')({ who, text });
-  });
-  listener.on('hint', toRenderer('listen:hint'));
-  listener.on('state', toRenderer('listen:state'));
-  listener.on('speaking', toRenderer('listen:speaking'));
-  listener.on('error', toRenderer('listen:error'));
-  listener.on('log', (m) => console.log('[audiotap]', m));
-
-  return listener;
-}
+let bound = {};   // action -> accelerator actually registered
 
 /**
- * Interview mode answers *as* the person described by the uploaded documents.
- * It falls back to the plain assistant prompt when no document has been added,
- * so turning the toggle on before uploading anything cannot produce a persona
- * with no history to stand on.
+ * Bind every shortcut from settings.
+ *
+ * These are global accelerators: the OS routes the key combination here before
+ * any other application sees it. A bare Shift+letter therefore removes that
+ * capital letter from the entire machine for as long as the app runs, which is
+ * why the bindings live in settings and every failure is reported rather than
+ * swallowed.
  */
-function systemPrompt(s) {
-  if (s.interviewMode) {
-    const p = persona.interviewPrompt(s.personaName);
-    if (p) return p;
-  }
-  return s.system;
-}
+function registerShortcuts() {
+  globalShortcut.unregisterAll();
+  bound = {};
 
-/** Recent speech, folded into the system prompt so answers have context. */
-function transcriptContext() {
-  if (!transcript.length) return '';
-  const recent = transcript.slice(-12)
-    .map((x) => `${x.who === 'you' ? 'Me' : 'Them'}: ${x.text}`).join('\n');
-  return '\n\nLive transcript of the call, oldest first. "Them" is the other ' +
-         'party, "Me" is the user. Use it as context; do not repeat it back:\n' + recent;
+  const wanted = store.getSettings().shortcuts || {};
+  const failed = [];
+
+  for (const [action, spec] of Object.entries(ACTIONS)) {
+    const accel = (wanted[action] || '').trim();
+    if (!accel) continue;
+    try {
+      if (globalShortcut.register(accel, spec.run)) {
+        bound[action] = accel;
+      } else {
+        failed.push(`${spec.label}: "${accel}" is already taken by another app`);
+      }
+    } catch (err) {
+      failed.push(`${spec.label}: "${accel}" is not a valid shortcut`);
+    }
+  }
+
+  if (failed.length) console.warn('[souffleur] ' + failed.join('; '));
+  return { bound, failed };
 }
 
 /* ---------------------------------- IPC ----------------------------------- */
@@ -231,16 +159,20 @@ ipcMain.handle('bootstrap', () => ({
 }));
 
 ipcMain.handle('settings:set', (_e, patch) => {
-  const before = store.getSettings().listenHotkey;
   const next = store.setSettings(patch);
-  if ('listenHotkey' in patch && patch.listenHotkey !== before) registerListenHotkey(null);
+  if ('shortcuts' in patch) registerShortcuts();
   return next;
 });
 
-ipcMain.handle('hotkey:check', () => ({
-  wanted: store.getSettings().listenHotkey,
-  bound: listenAccel,
-}));
+ipcMain.handle('hotkey:check', () => {
+  const { bound: b, failed } = { bound, failed: [] };
+  return {
+    wanted: store.getSettings().shortcuts,
+    bound: b,
+    actions: Object.fromEntries(Object.entries(ACTIONS).map(([k, v]) => [k, v.label])),
+    failed,
+  };
+});
 ipcMain.handle('key:set', (_e, { provider, key }) => {
   store.setKey(provider, key);
   return store.keyPresence();

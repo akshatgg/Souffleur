@@ -90,29 +90,35 @@ npm start</code></pre>
 </div>
 
 <h2>Shortcuts</h2>
+<p>The same on macOS and Windows.</p>
 <table>
-  <tr><th>Does</th><th>macOS</th><th>Windows</th></tr>
-  <tr><td>Show or hide the overlay</td><td><kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd></td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd></td></tr>
-  <tr><td>Capture your screen and ask about it</td><td><kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd></td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd></td></tr>
-  <tr><td>Start or stop listening to the call</td><td><kbd>Shift</kbd> + <kbd>Z</kbd></td><td><kbd>Shift</kbd> + <kbd>Z</kbd></td></tr>
-  <tr><td>Answer the last thing they said</td><td><kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd></td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd></td></tr>
-  <tr><td>Clear the conversation</td><td><kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd></td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd></td></tr>
-  <tr><td>Move the window</td><td><kbd>Cmd</kbd> + <kbd>Shift</kbd> + arrow keys</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + arrow keys</td></tr>
-  <tr><td>Close settings, stop a reply, or hide</td><td><kbd>Esc</kbd></td><td><kbd>Esc</kbd></td></tr>
+  <tr><th>Does</th><th>Keys</th></tr>
+  <tr><td>Show or hide the overlay</td><td><kbd>Shift</kbd> + <kbd>Space</kbd></td></tr>
+  <tr><td>Capture your screen and ask about it</td><td><kbd>Shift</kbd> + <kbd>S</kbd></td></tr>
+  <tr><td>Start or stop listening to the call</td><td><kbd>Shift</kbd> + <kbd>Z</kbd></td></tr>
+  <tr><td>Answer the last thing they said</td><td><kbd>Shift</kbd> + <kbd>A</kbd></td></tr>
+  <tr><td>Clear the conversation</td><td><kbd>Shift</kbd> + <kbd>K</kbd></td></tr>
+  <tr><td>Close settings, stop a reply, or hide</td><td><kbd>Esc</kbd></td></tr>
 </table>
+<p>Drag the title bar to move the window.</p>
 
 <div class="callout">
   <p>
-    <strong><kbd>Shift</kbd> + <kbd>Z</kbd> is a bare-letter global shortcut.</strong> It is
-    grabbed system-wide, so while it is bound, typing a capital Z in other apps
-    toggles listening instead of producing the letter. Change it under
-    <strong>Settings → Listen shortcut</strong>; <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> avoids the clash.
+    <strong>These are global shortcuts, and that has a cost.</strong> The system hands the
+    combination to Souffleur before any other app sees it, so while it is
+    running, <kbd>Shift</kbd> + those keys stop producing capital letters
+    elsewhere — <kbd>Shift</kbd> + <kbd>A</kbd> will not type an <strong>A</strong> in your editor or in Slack.
+  </p>
+  <p>
+    Every shortcut is editable under <strong>Settings → Shortcuts</strong>. Adding
+    <kbd>Alt</kbd> (for example <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd>)
+    keeps them one-handed without taking a letter away from the rest of the machine.
   </p>
 </div>
 
 <h2>Asking about your screen</h2>
 <p>
-  Press <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> — or the <strong>▣</strong> button — and whatever is on
+  Press <kbd>Shift</kbd> + <kbd>S</kbd> — or the <strong>▣</strong> button — and whatever is on
   screen is captured and sent with your question. Type a question first to be
   specific, or send nothing and it answers “what is on my screen?”
 </p>
@@ -144,7 +150,7 @@ npm start</code></pre>
 <p>
   Microphone capture is <strong>off by default</strong> — the point is hearing them, not you.
   When enabled, the two sources stay on separate channels so the transcript
-  knows who said what, and <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd> still answers <em>their</em> last line, not yours.
+  knows who said what, and <kbd>Shift</kbd> + <kbd>A</kbd> still answers <em>their</em> last line, not yours.
 </p>
 
 <div class="callout">
@@ -211,7 +217,7 @@ npm start</code></pre>
 <h2>Troubleshooting</h2>
 
 <h3>The overlay isn't visible</h3>
-<p>Press <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>. It hides rather than quits, and there's no Dock icon by design.</p>
+<p>Press <kbd>Shift</kbd> + <kbd>Space</kbd>. It hides rather than quits, and there's no Dock icon by design.</p>
 
 <h3>“No API key set”</h3>
 <p>Keys are stored per provider. If you switched from Gemini to OpenAI, the OpenAI key is a separate one. If the app was renamed or moved, a stored key may no longer decrypt — settings will say so explicitly, and you just paste it again.</p>

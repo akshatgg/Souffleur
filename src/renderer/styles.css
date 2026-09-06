@@ -335,6 +335,12 @@ textarea.sys { resize: vertical; min-height: 62px; line-height: 1.45; }
 .field-row select { flex: 1; min-width: 0; }
 .field-row .icon-btn { flex: none; width: 28px; height: 28px; border: 1px solid var(--rule); }
 
+.keys { display: grid; gap: 5px; }
+.key-row { display: grid; grid-template-columns: 1fr 130px; gap: 8px; align-items: center; }
+.key-row span { font-size: 12px; color: var(--ink-dim); }
+.key-row input { text-align: center; font-size: 12px; }
+.key-row input.bad { border-color: var(--alarm); color: var(--alarm); }
+
 .seg { display: flex; gap: 4px; }
 .seg button {
   flex: 1;

@@ -94,19 +94,21 @@ Keys are encrypted with the system keychain and never cross into the renderer.
 
 ## Shortcuts
 
-| Does | macOS | Windows |
-|---|---|---|
-| Show or hide the overlay | `Cmd + Shift + Space` | `Ctrl + Shift + Space` |
-| Capture your screen and ask about it | `Cmd + Shift + Enter` | `Ctrl + Shift + Enter` |
-| Start or stop listening to the call | `Shift + Z` | `Shift + Z` |
-| Answer the last thing they said | `Cmd + Shift + A` | `Ctrl + Shift + A` |
-| Clear the conversation | `Cmd + Shift + K` | `Ctrl + Shift + K` |
-| Move the window | `Cmd + Shift + arrows` | `Ctrl + Shift + arrows` |
-| Close settings, stop a reply, or hide | `Esc` | `Esc` |
+| Does | Keys |
+|---|---|
+| Show or hide the overlay | `Shift + Space` |
+| Capture your screen and ask about it | `Shift + S` |
+| Start or stop listening to the call | `Shift + Z` |
+| Answer the last thing they said | `Shift + A` |
+| Clear the conversation | `Shift + K` |
+| Close settings, stop a reply, or hide | `Esc` |
 
-The listen shortcut is configurable in settings. `Shift + Z` is a bare-letter
-global accelerator, which means capital Z stops reaching other apps while it is
-bound — `Alt + Shift + Z` avoids that.
+Identical on macOS and Windows. Drag the title bar to move the window.
+
+Every shortcut is editable under Settings. They are **global**: the system routes
+them to Souffleur before any other app, so `Shift` + those keys stop producing
+capital letters elsewhere while it runs. Adding `Alt` — `Alt + Shift + A` — keeps
+them one-handed without taking a letter from the rest of the machine.
 
 ## How the listening works
 

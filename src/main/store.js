@@ -21,7 +21,17 @@ const DEFAULTS = {
     'The user cannot see a long response without scrolling, so be brief unless asked to expand.',
   interviewMode: false,  // answer in first person as the person in the documents
   personaName: '',       // blank = inferred from the first document
-  listenHotkey: 'Shift+Z',  // global: fires in every app, so beware bare letters
+  // Every shortcut is global: it fires in EVERY app, not just this one. A bare
+  // Shift+letter therefore takes that capital letter away from the whole
+  // machine, which is why each one is editable rather than baked in.
+  shortcuts: {
+    toggle:     'Shift+Space',
+    screenshot: 'Shift+S',
+    listen:     'Shift+Z',
+    answer:     'Shift+A',
+    clear:      'Shift+K',
+  },
+  listenHotkey: '',        // legacy single-key setting, migrated into shortcuts
   transcribeModel: '',   // blank = pick automatically from the model list
   autoListen: false,     // start listening as soon as the app launches
   captureMic: false,     // also transcribe your own voice, not just the speakers
@@ -63,6 +73,11 @@ function getSettings() {
   const raw = readRaw();
   const out = { ...DEFAULTS };
   for (const k of Object.keys(DEFAULTS)) if (raw[k] !== undefined) out[k] = raw[k];
+
+  // Merge rather than replace, so a settings file written before a new action
+  // existed still gets a binding for it instead of leaving it unregistered.
+  out.shortcuts = { ...DEFAULTS.shortcuts, ...(raw.shortcuts || {}) };
+  if (raw.listenHotkey && !raw.shortcuts?.listen) out.shortcuts.listen = raw.listenHotkey;
   return out;
 }
 

@@ -288,11 +288,6 @@ function wireSettings() {
     await refreshModels();
   });
 
-  $('listenHotkey').addEventListener('change', async (e) => {
-    await patch({ listenHotkey: e.target.value.trim() });
-    paintHotkey();
-  });
-
   $('model').addEventListener('change', async (e) => {
     if (e.target.value === MANUAL) {
       const manual = $('modelManual');
@@ -388,25 +383,53 @@ function wirePersona() {
 }
 
 /**
- * Say plainly whether the accelerator was accepted, and warn about the cost of
- * a bare-letter global shortcut -- it is grabbed system-wide, so that letter
- * stops reaching every other app.
+ * One editable field per action.
+ *
+ * Every one of these is a GLOBAL accelerator: the OS hands the combination to
+ * Souffleur before any other app sees it. A bare Shift+letter therefore takes
+ * that capital letter away from the whole machine, so the field says which
+ * bindings do that and which the OS refused outright.
  */
 async function paintHotkey() {
   const st = await window.souffleur.hotkeyStatus();
-  const note = $('hotkeyNote');
-  $('listenHotkey').value = st.wanted || '';
+  const list = $('keyList');
+  const wanted = st.wanted || {};
 
-  if (st.wanted && !st.bound) {
-    note.className = 'note warn';
-    note.textContent = `"${st.wanted}" was refused, probably taken by another app. Try Alt+Shift+Z.`;
-    return;
+  list.innerHTML = Object.entries(st.actions || {}).map(([key, label]) => `
+    <div class="key-row">
+      <span>${esc(label)}</span>
+      <input type="text" data-action="${esc(key)}" spellcheck="false"
+             value="${esc(wanted[key] || '')}" placeholder="none">
+    </div>`).join('');
+
+  for (const input of list.querySelectorAll('input[data-action]')) {
+    input.addEventListener('change', async (e) => {
+      const next = { ...wanted, [e.target.dataset.action]: e.target.value.trim() };
+      await patch({ shortcuts: next });
+      paintHotkey();
+    });
+    // Refused by the OS, usually because another app already owns it.
+    const action = input.dataset.action;
+    if (wanted[action] && !(st.bound || {})[action]) input.classList.add('bad');
   }
-  const bare = /^shift\+[a-z0-9]$/i.test(st.wanted || '');
-  note.className = bare ? 'note warn' : 'note';
-  note.textContent = bare
-    ? `Works everywhere \u2014 including while you type, so ${st.wanted.slice(-1).toUpperCase()} will stop typing in other apps. Alt+Shift+Z avoids that.`
-    : 'Global shortcut. Works even when Souffleur is hidden.';
+
+  const bare = Object.values(wanted).filter((v) => /^shift\+\S+$/i.test(v || ''));
+  const note = $('hotkeyNote');
+  const refused = Object.keys(wanted).filter((k) => wanted[k] && !(st.bound || {})[k]);
+
+  if (refused.length) {
+    note.className = 'note warn';
+    note.textContent = 'Marked shortcuts were refused - another app already owns them.';
+  } else if (bare.length) {
+    note.className = 'note warn';
+    note.textContent =
+      `${bare.length} shortcut${bare.length > 1 ? 's use' : ' uses'} Shift and one key. ` +
+      'These work everywhere, so those keys stop reaching other apps while Souffleur runs. ' +
+      'Add Alt to any that get in the way.';
+  } else {
+    note.className = 'note';
+    note.textContent = 'Global shortcuts. They work even when Souffleur is hidden.';
+  }
 }
 
 /* -------------------------------- listening ------------------------------- */

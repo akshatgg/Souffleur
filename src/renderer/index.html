@@ -15,14 +15,14 @@
       <div class="status-actions">
         <button class="icon-btn" id="btnListen" title="Listen to the call (Shift+Z)" aria-pressed="false">◉</button>
         <button class="icon-btn" id="btnSettings" title="Settings">⚙</button>
-        <button class="icon-btn" id="btnHide" title="Hide (Cmd Shift Space)">✕</button>
+        <button class="icon-btn" id="btnHide" title="Hide (Shift+Space)">✕</button>
       </div>
     </div>
 
     <div class="log" id="log">
       <div class="empty" id="empty">
-        Ask anything, or press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> to ask about what is on your screen.<br>
-        <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> hides and shows this window.<br>
+        Ask anything, or press <kbd>Shift</kbd>+<kbd>S</kbd> to ask about what is on your screen.<br>
+        <kbd>Shift</kbd>+<kbd>Space</kbd> hides and shows this window.<br>
         <kbd>Shift</kbd>+<kbd>Z</kbd> listens to the call and transcribes what others say.
       </div>
     </div>
@@ -30,7 +30,7 @@
     <div class="composer">
       <div class="field">
         <textarea id="input" rows="1" placeholder="Ask something" autofocus></textarea>
-        <button class="icon-btn" id="btnShot" title="Ask about my screen (Cmd Shift Return)">▣</button>
+        <button class="icon-btn" id="btnShot" title="Ask about my screen (Shift+S)">▣</button>
       </div>
       <div class="hints">
         <span><kbd>⏎</kbd> send</span>
@@ -105,8 +105,8 @@
         </div>
 
         <div class="row">
-          <label for="listenHotkey">Listen shortcut</label>
-          <input type="text" id="listenHotkey" spellcheck="false" placeholder="Shift+Z">
+          <label>Shortcuts</label>
+          <div class="keys" id="keyList"></div>
           <div class="note" id="hotkeyNote"></div>
         </div>
 
