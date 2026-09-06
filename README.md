@@ -63,11 +63,19 @@ itself, and there is no hide/capture/show flicker.
 
 ### macOS
 
+**1. Install Homebrew** — skip if you already have it (`brew --version` to check):
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**2. Install Souffleur:**
+
 ```bash
 brew install --cask akshatgg/tap/souffleur
 ```
 
-Installs and opens with nothing to click through.
+The app installs into Applications and opens with nothing to click through.
 
 The disk image on the releases page works too, but the build is not notarised
 by Apple, so a manually downloaded copy is refused with *"Apple could not verify

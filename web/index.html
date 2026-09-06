@@ -173,19 +173,39 @@
   <div class="dl-split">
     <div class="dl-mac">
       <div class="dl-head">macOS</div>
-      <button class="cmd" id="brewCmd" type="button" title="Copy">
-        <code>brew install --cask akshatgg/tap/souffleur</code>
-        <span class="cmd-copy" id="brewCopy">Copy</span>
-      </button>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Install Homebrew — skip if you already have it</div>
+          <button class="cmd" data-cmd type="button" title="Copy">
+            <code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code>
+            <span class="cmd-copy">Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Install Souffleur</div>
+          <button class="cmd" id="brewCmd" data-cmd type="button" title="Copy">
+            <code>brew install --cask akshatgg/tap/souffleur</code>
+            <span class="cmd-copy" id="brewCopy">Copy</span>
+          </button>
+        </div>
+      </div>
+
       <p class="dl-why">
-        Installs and opens with nothing to click through. Downloading a disk
-        image instead means macOS refuses to open it until you approve the app
-        by hand in System Settings, because the build is not notarised by Apple.
+        Paste each into Terminal. The app installs and opens with nothing to click
+        through. Downloading a disk image instead means macOS refuses to open it
+        until you approve the app by hand in System Settings, because the build is
+        not notarised by Apple.
       </p>
       <p class="dl-alt">
-        No Homebrew? <a href="https://brew.sh">Install it</a>, or take the
-        <a href="https://github.com/akshatgg/Souffleur/releases/latest">disk image from the releases page</a>
-        and follow the <a href="/docs">approval steps</a>.
+        Would rather have the file? The
+        <a href="https://github.com/akshatgg/Souffleur/releases/latest">disk image is on the releases page</a>,
+        with the <a href="/docs">approval steps</a>.
       </p>
     </div>
 

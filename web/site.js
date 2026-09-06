@@ -29,10 +29,9 @@ async function wireDownloads() {
   if (isWin) document.getElementById('dl-win')?.classList.add('is-yours');
   if (isMac) document.querySelector('.dl-mac')?.classList.add('is-yours');
 
-  // Copy the command rather than making people select it by hand.
-  const btn = document.getElementById('brewCmd');
-  const flag = document.getElementById('brewCopy');
-  if (btn && flag) {
+  // Copy any command block rather than making people select it by hand.
+  for (const btn of document.querySelectorAll('[data-cmd]')) {
+    const flag = btn.querySelector('.cmd-copy');
     btn.addEventListener('click', async () => {
       const text = btn.querySelector('code').textContent.trim();
       try {
