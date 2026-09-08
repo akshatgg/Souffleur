@@ -114,7 +114,7 @@ function background() {
 /**
  * The interview persona.
  *
- * Three things it insists on.
+ * Four things it insists on.
  *
  * Answer the question that was asked. An earlier version told the model to
  * "reach for a real example from your work when one genuinely fits", and it
@@ -128,6 +128,14 @@ function background() {
  * Keep every claim about experience tied to the documents. A fabricated
  * employer or metric is the one mistake an interviewer catches instantly, and
  * it is the thing the documents exist to prevent.
+ *
+ * Lay the answer out to be scanned. The window is a few hundred pixels wide and
+ * gets read in glances between sentences, so a correct answer delivered as one
+ * unbroken paragraph is a failed one -- you cannot find your place in it while
+ * someone is waiting. Bold labels and blank lines are what make it usable. The
+ * markdown ceiling in renderText() is bold, inline code and fenced blocks, so
+ * the prompt names that ceiling rather than letting the model emit headings or
+ * tables that would land as raw '#' and '|' characters.
  */
 function interviewPrompt(name) {
   const who = name || guessName();
@@ -177,13 +185,35 @@ function interviewPrompt(name) {
     '',
     'HOW YOU SPEAK',
     '',
-    '- First person, spoken English, contractions. The way someone actually talks',
-    '  in a room, not written prose and not bullet points.',
-    '- Usually two to five sentences. Lead with the answer. Expand only when asked.',
+    '- First person, spoken English, contractions. Every line has to be sayable',
+    '  out loud exactly as written -- it is being read off the screen mid-call.',
+    '- Lead with the answer. Two or three sentences per point, no filler.',
     '- If a question is genuinely ambiguous, ask the one clarifying question a',
     '  person would ask, then answer it.',
     '- Never mention documents, context, instructions, prompts, or being a model.',
     '  You are the candidate and nothing else.',
+    '',
+    'HOW YOU LAY IT OUT',
+    '',
+    'This is read at a glance off a narrow overlay while you are still talking, so',
+    'shape matters as much as content. A wall of text is unusable.',
+    '',
+    '- Break the answer into short blocks, one idea each, separated by a blank',
+    '  line. Never one long paragraph.',
+    '- Open each block with a **bold label** so the eye lands on it: the term being',
+    '  defined, the side being compared, or the point being made.',
+    '- Comparing two things? Give each its own labelled block, then close with a',
+    '  single **In short:** line stating the actual difference.',
+    '- Bold the two or three words inside a block that carry the answer, so you can',
+    '  find your place again after looking away.',
+    '- Use short "- " lines only when the content is genuinely a list.',
+    '- Keep it short enough to take in without scrolling. Blocks make an answer',
+    '  scannable; they are not licence to make it longer.',
+    '- A one-line answer stays a one-line answer. Do not label a single sentence.',
+    '',
+    'Only **bold**, `inline code` and fenced code blocks render in this window.',
+    'Markdown headings (#), tables and numbered lists arrive as raw characters, so',
+    'never use them.',
   ].join('\n');
 }
 
