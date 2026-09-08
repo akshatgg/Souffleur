@@ -145,7 +145,7 @@
       "name": "Does Souffleur send my screen or my API key to your servers?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "There are no servers. Requests go from your machine straight to the provider whose key you entered, and the key itself is encrypted by the operating system keychain. Nothing is collected, and there is no account to create."
+        "text": "There are no servers behind the app. Requests go from your machine straight to the provider whose key you entered, and the key itself is encrypted by the operating system keychain. Downloading from this site asks you to sign in with Google, which records your name and email address and nothing else. The app itself collects nothing and never asks you to sign in."
       }
     }
   ]
@@ -166,8 +166,43 @@
   <div class="nav-links">
     <a href="/vs-cluely">vs Cluely</a>
     <a href="/docs">Docs</a>
-    <a href="https://github.com/akshatgg/Souffleur">Source</a>
     <a class="nav-cta" href="#download">Download</a>
+
+    <!-- Sign-up lives here because it now stands in front of the downloads.
+         Hidden until auth.js confirms Firebase is configured. -->
+    <span class="nav-auth" id="navAuth" hidden>
+      <span data-authout>
+        <button class="nav-signup" type="button" data-signin aria-label="Sign up with Google">
+          <svg class="g-mark" viewBox="0 0 18 18" width="16" height="16" aria-hidden="true" focusable="false">
+          <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/>
+          <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+        </svg>
+          <span class="nav-signup-label">Sign up</span>
+        </button>
+      </span>
+      <span class="nav-user" data-authin hidden>
+        <button class="avatar-btn" type="button" data-profile
+                aria-haspopup="menu" aria-expanded="false" aria-label="Your account">
+          <span data-initial>&nbsp;</span>
+        </button>
+
+        <div class="profile-pop" data-profilepop role="menu" aria-label="Account" hidden>
+          <div class="pop-head">
+            <span class="pop-avatar" data-initial aria-hidden="true">&nbsp;</span>
+            <span class="pop-id">
+              <strong data-who>Signed in</strong>
+              <span data-email></span>
+            </span>
+          </div>
+          <div class="pop-actions">
+            <button class="pop-item" type="button" role="menuitem" data-report hidden>Report</button>
+            <button class="pop-item" type="button" role="menuitem" data-signout>Sign out</button>
+          </div>
+        </div>
+      </span>
+    </span>
   </div>
 </nav>
 
@@ -187,7 +222,7 @@
       <a class="btn" href="/docs">Read the docs</a>
     </div>
     <p class="fine">
-      Free and open source. Your own API key. No account, no server.
+      Free and open source. Your own API key. The app runs entirely on your machine.
       <a href="/vs-cluely" class="inline-link">See how it compares to Cluely →</a>
     </p>
   </div>
@@ -314,7 +349,7 @@
 <section class="download" id="download">
   <h2>Download</h2>
   <p class="lede">
-    Free. No account. Bring an API key from whichever provider you prefer.
+    Free. Sign up once to download. Bring an API key from whichever provider you prefer.
     <span class="fine" style="margin:0">Version <span data-version>v0.1.4</span></span>
   </p>
 
@@ -378,6 +413,38 @@
     </a>
   </div>
 
+  <!-- The gate, explained where it bites. auth.js also intercepts the two
+       install controls above, so this stays in step with what they do. -->
+  <div class="account" id="account" hidden>
+    <div class="acct-row" data-authout>
+      <div class="acct-copy">
+        <strong>Sign up to download</strong>
+        <span>One click with Google. The app itself never asks you to sign in, and there is nothing to pay for.</span>
+      </div>
+      <button class="btn btn-google" type="button" data-signin>
+        <svg class="g-mark" viewBox="0 0 18 18" width="16" height="16" aria-hidden="true" focusable="false">
+          <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/>
+          <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+        </svg>
+        Continue with Google
+      </button>
+    </div>
+
+    <div class="acct-row" data-authin hidden>
+      <div class="acct-who">
+        <span class="acct-avatar" data-initial aria-hidden="true">&nbsp;</span>
+        <div class="acct-copy">
+          <strong data-who>Signed in</strong>
+          <span>Downloads are unlocked, and you will get an email when a new version ships.</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="acct-note" id="authNote" role="alert" hidden></p>
+  </div>
+
   <div class="notices">
     <p>
       On macOS, grant <strong>Screen Recording</strong> in System Settings →
@@ -390,6 +457,23 @@
       the rest of the pipeline is shared.
     </p>
   </div>
+</section>
+
+<!-- Owner only. Hidden here for tidiness, but what actually keeps it private is
+     the Firestore rule: any other account is refused the read outright. -->
+<section class="report" id="report" hidden aria-labelledby="report-h">
+  <div class="rep-head">
+    <h2 id="report-h">Report</h2>
+    <button class="btn btn-small" id="reportRefresh" type="button">Refresh</button>
+  </div>
+  <div class="rep-stats" id="reportStats"></div>
+  <p class="rep-status" id="reportStatus"></p>
+  <div class="rep-wrap" id="reportTable"></div>
+  <p class="fine">
+    This counts people who chose to sign in. The installers are also on the
+    public releases page, which needs no account, so read these as a floor
+    rather than a total.
+  </p>
 </section>
 
 <section class="faq" id="faq" aria-labelledby="faq-h">
@@ -453,10 +537,12 @@
   <details class="qa">
     <summary>Does it send my screen or my API key anywhere?</summary>
     <p>
-      There are no servers. Requests go from your machine straight to the
-      provider whose key you entered, and the key itself is encrypted by the
-      operating system keychain. Nothing is collected, and there is no account
-      to create.
+      There are no servers behind the app. Requests go from your machine
+      straight to the provider whose key you entered, and the key itself is
+      encrypted by the operating system keychain. Downloading from this site
+      asks you to sign in with Google, which records your name and email
+      address and nothing else. The app itself collects nothing and never asks
+      you to sign in.
     </p>
   </details>
 </section>
@@ -475,5 +561,6 @@
 </footer>
 
 <script src="/site.js" defer></script>
+<script src="/auth.js" type="module"></script>
 </body>
 </html>

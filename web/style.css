@@ -732,3 +732,258 @@ td:first-child { white-space: nowrap; width: 1%; padding-right: 22px; }
   overflow: hidden;
   white-space: nowrap;
 }
+
+/* ------------------------------ sign-up + report -------------------------- */
+
+/* The account and report blocks are toggled with the `hidden` attribute, and
+   several of them are flex containers — whose `display` would otherwise win.
+   Without this line a "hidden" row is fully visible. */
+[hidden] { display: none !important; }
+
+.account {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--ground-2);
+}
+.acct-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.acct-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.acct-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--gold-dim);
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.acct-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.acct-copy strong {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.acct-copy span { font-size: 13px; color: var(--ink-faint); }
+
+.acct-actions { display: flex; gap: 8px; flex: none; }
+
+.acct-note {
+  font-size: 13px;
+  color: #f0a6a6;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+}
+
+.btn-small { padding: 8px 15px; font-size: 13.5px; }
+
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  background: #fff;
+  border-color: #fff;
+  color: #1f2328;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-google:hover:not(:disabled) { background: #eceef1; border-color: #eceef1; }
+.btn-google:disabled { opacity: 0.6; cursor: default; }
+.g-mark { flex: none; }
+
+/* --------------------------------- report --------------------------------- */
+
+.report {
+  max-width: var(--max);
+  margin: 90px auto 0;
+  padding: 0 24px;
+}
+.rep-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rep-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 10px;
+  margin-top: 24px;
+}
+.rep-card {
+  padding: 16px 18px;
+  border: 1px solid var(--rule-2);
+  border-radius: 10px;
+  background: var(--ground-2);
+}
+.rep-n {
+  font-family: var(--serif);
+  font-size: 30px;
+  line-height: 1.1;
+  color: var(--gold);
+}
+.rep-l { margin-top: 4px; font-size: 12.5px; color: var(--ink-faint); }
+
+.rep-status { margin-top: 18px; font-size: 13.5px; color: var(--ink-dim); }
+
+/* The table is the one thing here that cannot always fit, so it scrolls inside
+   its own box rather than pushing the page sideways. */
+.rep-wrap { margin-top: 12px; overflow-x: auto; }
+
+.rep-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+.rep-table th {
+  text-align: left;
+  padding: 10px 16px 10px 0;
+  border-bottom: 1px solid var(--rule-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.rep-table td {
+  padding: 11px 16px 11px 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-dim);
+}
+.rep-table td:first-child { color: var(--ink); }
+
+@media (max-width: 620px) {
+  .report { padding: 0 22px; }
+  .acct-row { align-items: flex-start; }
+  .btn-google { width: 100%; justify-content: center; }
+}
+
+/* ------------------------------- navbar auth ------------------------------ */
+
+.nav-auth { display: flex; align-items: center; gap: 10px; }
+
+.nav-signup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid #fff;
+  border-radius: 7px;
+  background: #fff;
+  color: #1f2328;
+  font: 600 14px/1 var(--sans);
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.nav-signup:hover:not(:disabled) { background: #eceef1; border-color: #eceef1; }
+.nav-signup:disabled { opacity: 0.55; cursor: default; }
+
+.nav-user { position: relative; display: flex; align-items: center; }
+
+/* The account, reduced to one letter in a circle. A letter is always available,
+   never fails to load, and costs no request to a Google photo CDN. */
+.avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--rule-2);
+  border-radius: 50%;
+  background: var(--gold-dim);
+  color: var(--gold);
+  font: 600 14px/1 var(--sans);
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.avatar-btn:hover { border-color: var(--gold); background: rgba(242, 200, 120, 0.22); }
+
+.profile-pop {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 50;          /* the nav itself is 40 */
+  min-width: 240px;
+  /* Without a cap the card grows to whatever a long address measures, and on a
+     narrow screen it hangs off the left edge. The cap is what makes the
+     ellipsis below do anything at all. */
+  max-width: min(300px, calc(100vw - 28px));
+  padding: 6px;
+  border: 1px solid var(--rule-2);
+  border-radius: 12px;
+  background: var(--ground-2);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
+}
+.pop-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 11px 13px;
+  border-bottom: 1px solid var(--rule);
+}
+.pop-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--gold-dim);
+  color: var(--gold);
+  font-size: 15px;
+  font-weight: 600;
+}
+/* Long names and addresses get an ellipsis rather than widening the card. */
+.pop-id { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pop-id strong,
+.pop-id span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pop-id strong { font-size: 14px; font-weight: 600; }
+.pop-id span { font-size: 12.5px; color: var(--ink-faint); }
+
+.pop-actions { display: flex; flex-direction: column; padding-top: 6px; }
+.pop-item {
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-dim);
+  font: 500 13.5px/1 var(--sans);
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.pop-item:hover { background: rgba(255, 255, 255, 0.06); color: var(--ink); }
+
+/* The bar carries a lot at the small end: logo, Download, and now the account.
+   The label goes first — the Google mark still says what the button is — then
+   the name, which is the least load-bearing thing there. */
+@media (max-width: 620px) {
+  .nav-links { gap: 12px; }
+  .nav-signup { padding: 7px 10px; }
+  .nav-signup-label { display: none; }
+}

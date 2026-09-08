@@ -29,6 +29,8 @@ const BROWSER_GLOBALS = {
   requestAnimationFrame: 'readonly', cancelAnimationFrame: 'readonly',
   AudioContext: 'readonly', MediaStream: 'readonly', Range: 'readonly',
   Int16Array: 'readonly', Blob: 'readonly',
+  localStorage: 'readonly', requestIdleCallback: 'readonly',
+  location: 'readonly',
 };
 
 module.exports = [
@@ -47,6 +49,34 @@ module.exports = [
   {
     files: ['packaging/**/*.mjs'],
     languageOptions: { sourceType: 'module' },
+  },
+  /* The website. Same reason as the renderer: these files call each other and
+     the browser only finds a dangling reference when a visitor clicks. */
+  {
+    files: ['web/**/*.js'],
+    ignores: ['web/api/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2023,
+      sourceType: 'module',
+      globals: BROWSER_GLOBALS,
+    },
+    rules: {
+      'no-undef': 'error',
+      'no-unused-vars': ['warn', { args: 'none' }],
+    },
+  },
+  /* The one serverless function, which runs on Node rather than in a browser. */
+  {
+    files: ['web/api/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2023,
+      sourceType: 'module',
+      globals: NODE_GLOBALS,
+    },
+    rules: {
+      'no-undef': 'error',
+      'no-unused-vars': ['warn', { args: 'none' }],
+    },
   },
   {
     files: ['src/renderer/**/*.js'],

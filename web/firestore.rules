@@ -1,0 +1,57 @@
+rules_version = '2';
+
+/* Firestore security rules for the Souffleur site.
+ *
+ * Paste these into the Firebase console under Firestore Database -> Rules and
+ * press Publish. Nothing else enforces this: the web config in
+ * firebase-config.js is public, so these rules are the whole of the access
+ * control, and the report is only owner-only because of the isAdmin() check
+ * below — not because the button is hidden in the UI.
+ *
+ * Anything not matched here is denied, which is Firestore's default.
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    /* The one account that may read the whole collection. email_verified is
+       checked as well as the address, so a provider that hands out an
+       unverified address cannot be used to claim it. */
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'akshatg9636@gmail.com';
+    }
+
+    match /users/{uid} {
+
+      // Your own row, or every row if you are the owner.
+      allow get: if isOwner(uid) || isAdmin();
+      allow list: if isAdmin();
+
+      // A new row has to describe the person writing it — same uid, and the
+      // address out of their own verified token rather than one they typed.
+      allow create: if isOwner(uid)
+                    && request.resource.data.uid == uid
+                    && request.resource.data.email == request.auth.token.email;
+
+      // Later writes are the install counters, lastSeen, and the welcome stamp.
+      // Identity is pinned: neither the uid nor the address may change.
+      allow update: if isOwner(uid)
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.email == resource.data.email;
+
+      // Rows are kept. Deleting one would let somebody re-trigger the welcome
+      // mail by signing in again.
+      allow delete: if false;
+    }
+  }
+}

@@ -23,6 +23,13 @@ came from this folder are silently replaced.
     docs.html         install, providers, shortcuts, listening, interview mode
     site.js           resolves download links to the latest release assets and
                       highlights the one matching the visitor's platform
+    auth.js           optional Google sign-in, install counters, owner report
+    report-model.js   the report arithmetic, kept testable outside the browser
+    firebase-config.js  public Firebase web config — see SETUP.md
+    firestore.rules   the access control for the above; publish it in the console
+    api/welcome.js    verifies a sign-in token, then sends the welcome mail and
+                      the owner notice over SMTP
+    SETUP.md          how to wire all of that up, start to finish
     style.css         shared by all three pages
     robots.txt        crawl policy; names the sitemap
     sitemap.xml       the three URLs; lastmod refreshed by `npm run site:update`

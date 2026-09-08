@@ -1,0 +1,11 @@
+{
+  "name": "souffleur-web",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The Souffleur website. Static pages, plus one serverless function that sends the welcome mail.",
+  "type": "module",
+  "dependencies": {
+    "jose": "^6.2.12",
+    "nodemailer": "^10.0.1"
+  }
+}
