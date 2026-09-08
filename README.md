@@ -180,6 +180,25 @@ knows who spoke.
   platform at runtime rather than trusting a build-time assumption, and turns
   amber when protection is not actually in force.
 
+## Running both locally
+
+```bash
+./dev_start.sh              # website on :3000, and the app
+./dev_start.sh --port 8080  # somewhere else
+./dev_start.sh --web-only   # or --app-only
+```
+
+Ctrl+C stops whatever it started.
+
+The website is served by `vercel dev`, not a plain static server, because three
+things the site needs do not exist without it: clean URLs (so `/docs` and
+`/vs-cluely` resolve at all), the `/api/welcome` function behind the sign-up
+mail, and the headers and redirects in `web/vercel.json`. Serving `web/` with
+`python3 -m http.server` gives a 404 on every page but the homepage.
+
+Development only. The site deploys from a push and the app is built by
+electron-builder; neither runs this script.
+
 ## Two deployments, and they are not the same thing
 
 **The website** deploys on every push to `master`. No version, no tag, nothing
@@ -226,7 +245,8 @@ npm test
 ```
 
 Covers the SSE parser (CRLF framing, split chunks, unterminated streams), the
-audio frame protocol, and the silence gate.
+audio frame protocol, the silence gate, and the arithmetic behind the website's
+sign-up report.
 
 ## License
 
