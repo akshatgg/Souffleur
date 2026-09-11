@@ -19,6 +19,13 @@
 #   ./dev_start.sh --port 8080      a different port
 #   ./dev_start.sh --web-only       just the website
 #   ./dev_start.sh --app-only       just the app
+#   ./dev_start.sh --free-key       try the free key the way a new user meets it
+#
+# --free-key (or FREE_KEY_TEST=1 below) starts the app as a brand-new user, in
+# a profile of its own with no saved key, against this machine's website. The
+# local /api/free answers on the GEMINI_API_KEY in .env.free-test, a git-ignored
+# file holding one line: GEMINI_API_KEY=...  Your real profile and its saved
+# keys are not touched.
 #
 # Ctrl+C stops whatever it started.
 
@@ -29,12 +36,14 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 PORT=3000
 WANT_WEB=1
 WANT_APP=1
+FREE_KEY_TEST=0   # 1 = the same as passing --free-key
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --port|-p) PORT="${2:?--port needs a number}"; shift 2 ;;
     --web-only) WANT_APP=0; shift ;;
     --app-only) WANT_WEB=0; shift ;;
+    --free-key) FREE_KEY_TEST=1; shift ;;
     # Print the header block above, whatever length it grows to.
     -h|--help) awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "$0"; exit 0 ;;
     *) echo "unknown option: $1 — try --help" >&2; exit 2 ;;
@@ -54,6 +63,14 @@ prefix() { awk -v tag="$1" '{ printf "%s %s\n", tag, $0; fflush() }'; }
 command -v node >/dev/null || die "node is not installed"
 
 [ -d node_modules ] || { say "installing app dependencies…"; npm install --silent; }
+
+# The free key's function runs inside `vercel dev`, so a test without the
+# website has nothing to answer it, and one without a key has nothing to send.
+if [ "$FREE_KEY_TEST" = 1 ]; then
+  [ "$WANT_WEB" = 1 ] || die "--free-key needs the website too; drop --app-only"
+  grep -q '^GEMINI_API_KEY=.' .env.free-test 2>/dev/null \
+    || die "--free-key needs .env.free-test with a line GEMINI_API_KEY=... (git-ignored)"
+fi
 
 if [ "$WANT_WEB" = 1 ]; then
   command -v vercel >/dev/null || die "vercel CLI missing — npm i -g vercel"
@@ -123,7 +140,14 @@ trap cleanup EXIT INT TERM
 
 if [ "$WANT_WEB" = 1 ]; then
   say "website  → http://localhost:$PORT"
-  ( vercel dev --listen "$PORT" --yes 2>&1 | prefix $'\033[36m[web]\033[0m' ) &
+  (
+    # Only the website sees the key, and only for this run.
+    if [ "$FREE_KEY_TEST" = 1 ]; then
+      set -a; . ./.env.free-test; set +a
+      export FREE_KEY_TEST=1
+    fi
+    vercel dev --listen "$PORT" --yes 2>&1 | prefix $'\033[36m[web]\033[0m'
+  ) &
   PIDS+=($!)
 
   # The app is worth starting only once the site answers, so that a first
@@ -136,7 +160,13 @@ fi
 
 if [ "$WANT_APP" = 1 ]; then
   say "app      → electron, with logging"
-  ( npm run dev 2>&1 | prefix $'\033[35m[app]\033[0m' ) &
+  (
+    if [ "$FREE_KEY_TEST" = 1 ]; then
+      say "free key → on, as a new user with no saved key (profile: Souffleur Free Test)"
+      export SOUFFLEUR_FREE_TEST=1 SOUFFLEUR_SITE="http://localhost:$PORT"
+    fi
+    npm run dev 2>&1 | prefix $'\033[35m[app]\033[0m'
+  ) &
   PIDS+=($!)
 fi
 

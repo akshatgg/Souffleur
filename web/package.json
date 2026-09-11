@@ -2,9 +2,10 @@
   "name": "souffleur-web",
   "private": true,
   "version": "0.0.0",
-  "description": "The Souffleur website. Static pages, plus one serverless function that sends the welcome mail.",
+  "description": "The Souffleur website. Static pages, plus two serverless functions: the welcome mail and the free key.",
   "type": "module",
   "dependencies": {
+    "@upstash/redis": "^1.38.4",
     "jose": "^6.2.12",
     "nodemailer": "^10.0.1"
   }

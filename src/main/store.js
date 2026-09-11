@@ -45,6 +45,8 @@ const DEFAULTS = {
   captureMic: false,     // also transcribe your own voice, not just the speakers
   opacity: 0.96,
   bounds: null,
+  freeKeyOn: false,      // the free key's switch as last read, for offline launches
+  installId: '',         // random, made once; the free key counts its daily limit by it
 };
 
 let filePath = null;

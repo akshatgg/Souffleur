@@ -11,7 +11,9 @@ This is that, for calls. A small always-on-top window that sees your screen,
 hears the room, and answers questions — while staying out of the screen-share
 stream everyone else is watching.
 
-Bring your own API key. Nothing is sent anywhere except to the provider you pick.
+No API key needed to start: while the free key is on, answers come through
+Souffleur's server on our Gemini key, up to a daily limit. Bring your own key
+and nothing is sent anywhere except to the provider you pick.
 
 ```
    YOUR SCREEN                        WHAT THEY SEE

@@ -174,7 +174,7 @@ npm run build:native   # macOS only: audio tap + PDF reader
 npm start</code></pre>
 
 <h2>Connect a provider</h2>
-<p>Souffleur has no server and no account. It talks to whichever provider you give it a key for, and nothing else.</p>
+<p>You can skip this. While the free key is on, Souffleur answers with no key at all, up to a daily limit, and settings says so. A key of your own has no limit, and with it Souffleur talks to that provider directly and nothing else. There is no account either way.</p>
 
 <table>
   <tr><th>Provider</th><th>Get a key</th></tr>
@@ -183,7 +183,7 @@ npm start</code></pre>
   <tr><td><strong>Anything OpenAI-compatible</strong></td><td>Groq, Together, OpenRouter, Ollama, LM Studio, vLLM — pick <strong>Other</strong> and give it a base URL</td></tr>
 </table>
 
-<p>Open settings with the <strong>⚙</strong> button, choose a provider, paste your key, then press <strong>Save</strong>.</p>
+<p>Open settings with the <strong>⚙</strong> button (on the free key, press <strong>Use my own key</strong> first), choose a provider, paste your key, then press <strong>Save</strong>.</p>
 
 <p>
   The model list is fetched <strong>from your own key</strong> rather than hardcoded, so it
@@ -360,10 +360,13 @@ npm start</code></pre>
 
 <h2>Privacy</h2>
 <ul>
-  <li>No telemetry, and no server of ours behind the app — there isn't one to run.
-      Downloading from the site asks for a Google sign-in, which records a name and
-      an email address; the app never asks for either.</li>
-  <li>Screenshots, audio and documents go only to the provider whose key you supplied.</li>
+  <li>No telemetry. Downloading from the site asks for a Google sign-in, which
+      records a name and an email address; the app never asks for either.</li>
+  <li>With your own key, screenshots, audio and documents go only to the provider
+      whose key you supplied.</li>
+  <li>On the free key they pass through Souffleur's server to Google Gemini. The
+      server logs none of it and keeps only a daily count per install, under a
+      hashed id, for two days.</li>
   <li>Keys are encrypted in the system keychain; the UI can never read one back.</li>
   <li>Transcripts live in memory and are gone when you quit.</li>
 </ul>

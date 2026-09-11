@@ -1,0 +1,68 @@
+name: Free key
+
+# The switch for the free key: answers on the owner's Gemini key for anyone
+# who has not added a key of their own.
+#
+#   Actions -> Free key -> Run workflow, tick or untick the box, Run.
+#
+# It rewrites web/free-key.json and pushes it. The site deploys on every push
+# to master, and both readers of the switch follow within a minute or two:
+# the app (on its next launch, or its next question) and the server function
+# that holds the key, which refuses to answer while the switch is off.
+#
+# The key itself is never in this repository. It lives in the Vercel project
+# as GEMINI_API_KEY; see web/SETUP.md.
+on:
+  workflow_dispatch:
+    inputs:
+      enabled:
+        description: 'Turn the free key on'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+# Two runs racing would push in either order; let the last one win cleanly.
+concurrency: free-key
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Turn the free key ${{ inputs.enabled && 'on' || 'off' }}
+        run: |
+          set -euo pipefail
+          printf '{ "enabled": %s }\n' "${{ inputs.enabled }}" > web/free-key.json
+          if git diff --quiet -- web/free-key.json; then
+            echo "The free key is already ${{ inputs.enabled && 'on' || 'off' }}."
+            exit 0
+          fi
+          git config user.name  "akshatgg"
+          git config user.email "akshatgg@users.noreply.github.com"
+          git commit -am "Turn the free key ${{ inputs.enabled && 'on' || 'off' }}"
+          git push origin master
+
+      # A green run should mean the site is serving the new value, not only
+      # that a commit was pushed.
+      - name: Wait for the site to serve it
+        run: |
+          set -euo pipefail
+          want="${{ inputs.enabled }}"
+          for i in $(seq 1 40); do
+            got="$(curl -fsS -H 'Cache-Control: no-cache' https://getsouffleur.vercel.app/free-key.json \
+                   | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).enabled)}catch{console.log("unreadable")}})' \
+                   || echo unreachable)"
+            if [ "$got" = "$want" ]; then
+              echo "The site says enabled=$got."
+              exit 0
+            fi
+            echo "Site still says $got, waiting for the deploy ($i/40)"
+            sleep 15
+          done
+          echo "::error::The site did not pick up the change within 10 minutes. Check the deploy on Vercel."
+          exit 1

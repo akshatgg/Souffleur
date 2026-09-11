@@ -1,6 +1,9 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/free.js": { "includeFiles": "free-key.json" }
+  },
   "redirects": [
     {
       "source": "/:path*",
@@ -39,6 +42,12 @@
       "source": "/(.*).png",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    },
+    {
+      "source": "/free-key.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
       ]
     },
     {

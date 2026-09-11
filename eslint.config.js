@@ -19,7 +19,7 @@ const NODE_GLOBALS = {
   setInterval: 'readonly', clearInterval: 'readonly',
   setImmediate: 'readonly', fetch: 'readonly', URL: 'readonly',
   TextDecoder: 'readonly', TextEncoder: 'readonly',
-  AbortController: 'readonly', FormData: 'readonly', Blob: 'readonly',
+  AbortController: 'readonly', AbortSignal: 'readonly', FormData: 'readonly', Blob: 'readonly',
 };
 
 const BROWSER_GLOBALS = {

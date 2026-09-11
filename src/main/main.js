@@ -2,13 +2,22 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, screen, shell,
         systemPreferences, desktopCapturer, dialog, session } = require('electron');
 const path = require('path');
+const crypto = require('crypto');
 
 const { applyStealth, hideFromDock, stealthStatus } = require('./stealth');
 const { streamChat, listModels, transcribe, defaultTranscribeModel, PRESETS } = require('./providers');
+const freekey = require('./freekey');
 const { Listener } = require('./listen');
 const persona = require('./persona');
 const store = require('./store');
 const { captureScreen } = require('./capture');
+
+// Trying the free key locally (./dev_start.sh --free-key) runs as a brand-new
+// user: a profile of its own, with no saved key, so it shows what a first
+// launch shows and never touches the keys saved in the real profile.
+if (freekey.TEST) {
+  app.setPath('userData', path.join(app.getPath('appData'), 'Souffleur Free Test'));
+}
 
 let win = null;
 let inFlight = null; // AbortController for the active completion
@@ -137,24 +146,84 @@ function registerShortcuts() {
   return { bound, failed };
 }
 
+/* -------------------------------- free key --------------------------------- */
+
+let freeOn = false;        // the switch as last read
+let switchRead = null;     // the read in flight, or the last one to finish
+
+function setFreeOn(on) {
+  if (on === freeOn) return;
+  freeOn = on;
+  store.setSettings({ freeKeyOn: on });
+  if (win && !win.isDestroyed()) win.webContents.send('freekey:state', on);
+}
+
+/** Ask the website whether the free key is on. Keeps the last answer when offline. */
+function refreshSwitch() {
+  switchRead = freekey.readSwitch().then((on) => {
+    if (on !== null) setFreeOn(on);
+    return freeOn;
+  });
+  return switchRead;
+}
+
+function installId() {
+  let id = store.getSettings().installId;
+  if (!id) {
+    id = crypto.randomUUID();
+    store.setSettings({ installId: id });
+  }
+  return id;
+}
+
+/**
+ * The provider options for whichever key answers, or null when there is none.
+ * On the free key the server picks the model, so none is sent.
+ */
+function routeFor(s) {
+  const apiKey = store.getKey(s.provider);
+  const route = freekey.pickRoute({ hasOwnKey: Boolean(apiKey), freeOn });
+  if (route === 'own') return { provider: s.provider, apiKey, model: s.model, baseUrl: s.baseUrl };
+  if (route === 'free') return { provider: 'gemini', free: { installId: installId() } };
+  return null;
+}
+
+/**
+ * The owner switched the free key off since it was last read: stop offering
+ * it, so settings shows the key fields again.
+ */
+function noteFreeStop(err) {
+  if (err?.code === 'free_off') setFreeOn(false);
+}
+
 /* -------------------------------- listening -------------------------------- */
 
 function transcribeModelFor(s) {
   return s.transcribeModel || defaultTranscribeModel(s.provider, lastModelList[s.provider]);
 }
 
+// Once the free key says no (limit reached, or switched off), every clip still
+// queued would fail the same way and each would print the same error. The first
+// one says it; the rest are dropped until listening is started again.
+let freeListenStopped = false;
+
 function ensureListener() {
   if (listener) return listener;
 
   listener = new Listener(async (wav) => {
+    if (freeListenStopped) return '';
     const s = store.getSettings();
-    return transcribe({
-      provider: s.provider,
-      apiKey: store.getKey(s.provider),
-      model: transcribeModelFor(s),
-      baseUrl: s.baseUrl,
-      wav,
-    });
+    const route = routeFor(s);
+    if (!route) throw new Error('no API key');
+    try {
+      return await transcribe({ ...route, model: route.free ? undefined : transcribeModelFor(s), wav });
+    } catch (err) {
+      if (route.free && freekey.isFreeStop(err)) {
+        freeListenStopped = true;
+        noteFreeStop(err);
+      }
+      throw err;
+    }
   });
 
   const toRenderer = (ch) => (payload) => {
@@ -200,28 +269,36 @@ function transcriptContext() {
 
 /* ---------------------------------- IPC ----------------------------------- */
 
-ipcMain.handle('bootstrap', () => ({
-  settings: store.getSettings(),
-  presets: PRESETS,
-  keys: store.keyPresence(),
-  keyStatuses: store.keyStatuses(),
-  docs: persona.list(),
-  maxDocs: persona.MAX_DOCS,
-  suggestedName: persona.guessName(),
-  keyStorage: store.keyStorageMode(),
-  stealth: stealthStatus(),
-  platform: process.platform,
-  // PDF reading is pure JavaScript and works everywhere. Audio capture still
-  // needs a platform helper, so the UI disables it where there is none rather
-  // than failing when pressed.
-  capabilities: {
-    // macOS captures through the ScreenCaptureKit helper; Windows captures in
-    // the renderer through Chromium's loopback support. Linux has neither.
-    audio: process.platform === 'darwin' || process.platform === 'win32',
-    audioMode: process.platform === 'darwin' ? 'helper' : 'renderer',
-    pdf: true,
-  },
-}));
+ipcMain.handle('bootstrap', async () => {
+  // Someone with no key at all is sent to settings to add one -- unless the free
+  // key is on. Wait for the launch-time read of the switch, so a first launch
+  // does not ask for a key it does not need.
+  if (!Object.values(store.keyPresence()).some(Boolean)) await switchRead;
+
+  return {
+    settings: store.getSettings(),
+    freeKey: freeOn,
+    presets: PRESETS,
+    keys: store.keyPresence(),
+    keyStatuses: store.keyStatuses(),
+    docs: persona.list(),
+    maxDocs: persona.MAX_DOCS,
+    suggestedName: persona.guessName(),
+    keyStorage: store.keyStorageMode(),
+    stealth: stealthStatus(),
+    platform: process.platform,
+    // PDF reading is pure JavaScript and works everywhere. Audio capture still
+    // needs a platform helper, so the UI disables it where there is none rather
+    // than failing when pressed.
+    capabilities: {
+      // macOS captures through the ScreenCaptureKit helper; Windows captures in
+      // the renderer through Chromium's loopback support. Linux has neither.
+      audio: process.platform === 'darwin' || process.platform === 'win32',
+      audioMode: process.platform === 'darwin' ? 'helper' : 'renderer',
+      pdf: true,
+    },
+  };
+});
 
 ipcMain.handle('settings:set', (_e, patch) => {
   const next = store.setSettings(patch);
@@ -326,6 +403,7 @@ ipcMain.handle('listen:pcm', (_e, buf) => {
 });
 
 ipcMain.handle('listen:start', async () => {
+  freeListenStopped = false;
   // Windows captures in the renderer; there is no helper to spawn.
   if (process.platform !== 'darwin') return ensureListener().startExternal();
 
@@ -377,8 +455,13 @@ ipcMain.handle('chat:abort', () => {
  */
 ipcMain.handle('chat:send', async (event, { messages, withScreenshot }) => {
   const s = store.getSettings();
-  const apiKey = store.getKey(s.provider);
-  if (!apiKey) {
+  let route = routeFor(s);
+  // The free key may have been switched on since launch; ask before refusing.
+  if (!route) {
+    await refreshSwitch();
+    route = routeFor(s);
+  }
+  if (!route) {
     return { ok: false, error: `No API key set for ${PRESETS[s.provider]?.label || s.provider}.` };
   }
 
@@ -414,10 +497,7 @@ ipcMain.handle('chat:send', async (event, { messages, withScreenshot }) => {
   try {
     let any = false;
     const stream = streamChat({
-      provider: s.provider,
-      apiKey,
-      model: s.model,
-      baseUrl: s.baseUrl,
+      ...route,
       system: systemPrompt(s) + transcriptContext(),
       messages,
       image,
@@ -432,6 +512,7 @@ ipcMain.handle('chat:send', async (event, { messages, withScreenshot }) => {
     return { ok: true, hadImage: Boolean(image) };
   } catch (err) {
     if (err.name === 'AbortError') return { ok: false, aborted: true };
+    if (route.free) noteFreeStop(err);
     return { ok: false, error: err.message || String(err) };
   } finally {
     if (inFlight === ctrl) inFlight = null;
@@ -449,6 +530,10 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     hideFromDock();
     if (process.platform !== 'darwin') grantLoopbackAudio();
+    // Started before the window so the answer is usually in by the time the
+    // page asks for it.
+    freeOn = store.getSettings().freeKeyOn;
+    refreshSwitch();
     createWindow();
     registerShortcuts();
 

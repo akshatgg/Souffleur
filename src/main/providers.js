@@ -9,9 +9,12 @@
  *              Ollama, LM Studio, vLLM, Azure ...)
  *
  * Every provider streams, and every one takes an optional screenshot.
- * All keys are the user's own and never leave this machine except to the
- * provider the user picked.
+ * A user's own key never leaves this machine except to the provider they
+ * picked. Without one, Gemini calls can go to the free key's server instead
+ * (see freekey.js), which adds the owner's key there.
  */
+
+const { FREE_URL } = require('./freekey');
 
 // Set SOUFFLEUR_DEBUG=1 to log response shapes (never keys) to the Electron console.
 const DEBUG = process.env.SOUFFLEUR_DEBUG === '1';
@@ -94,15 +97,27 @@ async function* sseEvents(res) {
   }
 }
 
+const FREE = 'Free key';
+
 async function failLoudly(res, provider) {
   let detail = '';
+  let code = '';
   try {
     const body = await res.text();
     try {
       const j = JSON.parse(body);
       detail = j?.error?.message || j?.error?.status || body.slice(0, 300);
+      code = typeof j?.error?.code === 'string' ? j.error.code : '';
     } catch { detail = body.slice(0, 300); }
   } catch { /* body already consumed or empty */ }
+
+  // The free key's server writes its messages for the user, so they are shown
+  // as they are, and the code tells the caller whether to stop using it.
+  if (provider === FREE) {
+    const err = new Error(detail || `${FREE}: HTTP ${res.status}`);
+    err.code = code;
+    throw err;
+  }
 
   if (res.status === 401 || res.status === 403) {
     throw new Error(`${provider}: key rejected (${res.status}). ${detail}`);
@@ -159,7 +174,28 @@ async function* streamOpenAI({ apiKey, model, baseUrl, messages, image, system, 
 
 /* --------------------------------- Gemini ---------------------------------- */
 
-async function* streamGemini({ apiKey, model, messages, image, system, signal }) {
+/**
+ * Where a Gemini call goes. With the user's own key, straight to Google. On
+ * the free key, to our server, which chooses the model and adds the key; the
+ * request body is the same either way, so is the reply.
+ */
+function geminiTarget({ apiKey, model, free }, method) {
+  if (free) {
+    return {
+      url: `${FREE_URL}?kind=${method === 'generateContent' ? 'transcribe' : 'chat'}`,
+      headers: { 'Content-Type': 'application/json', 'x-souffleur-install': free.installId },
+      label: FREE,
+    };
+  }
+  return {
+    url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}` +
+         `:${method}${method === 'streamGenerateContent' ? '?alt=sse' : ''}`,
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+    label: null,
+  };
+}
+
+async function* streamGemini({ apiKey, model, messages, image, system, signal, free }) {
   const contents = messages.map((m) => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }],
@@ -175,17 +211,14 @@ async function* streamGemini({ apiKey, model, messages, image, system, signal })
   const body = { contents };
   if (system) body.systemInstruction = { parts: [{ text: system }] };
 
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}` +
-    `:streamGenerateContent?alt=sse`;
-
-  const res = await fetch(url, {
+  const target = geminiTarget({ apiKey, model, free }, 'streamGenerateContent');
+  const res = await fetch(target.url, {
     method: 'POST',
     signal,
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+    headers: target.headers,
     body: JSON.stringify(body),
   });
-  if (!res.ok) await failLoudly(res, 'Gemini');
+  if (!res.ok) await failLoudly(res, target.label || 'Gemini');
 
   const ctype = res.headers.get('content-type') || '';
   dbg('gemini content-type:', ctype, 'model:', model);
@@ -235,7 +268,7 @@ async function* streamGemini({ apiKey, model, messages, image, system, signal })
     for (const j of Array.isArray(parsed) ? parsed : [parsed]) yield* textFrom(j);
   }
 
-  if (!sawText) throw new Error(emptyReason(lastMeta, model));
+  if (!sawText) throw new Error(emptyReason(lastMeta, free ? null : model));
 }
 
 /** Turn a text-free Gemini response into something actionable. */
@@ -254,6 +287,8 @@ function emptyReason(meta, model) {
   if (cand && !cand.content) {
     return `Gemini returned a candidate with no content (finishReason: ${finish || 'unset'}).`;
   }
+  // The free key's model is chosen on the server, so there is nothing to pick.
+  if (!model) return 'Gemini returned no text. Try again.';
   return `Gemini returned no text for model "${model}". Open settings and press the refresh button to pick a model your key supports.`;
 }
 
@@ -270,17 +305,15 @@ const TRANSCRIBE_PROMPT =
  * Deliberately non-streaming: these are short clips and the caller wants a
  * whole line to append to the transcript, not a trickle of tokens.
  */
-async function transcribe({ provider, apiKey, model, baseUrl, wav, signal }) {
-  if (!apiKey) throw new Error('no API key');
+async function transcribe({ provider, apiKey, model, baseUrl, wav, signal, free }) {
+  if (!apiKey && !free) throw new Error('no API key');
 
-  if (provider === 'gemini') {
-    const url =
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}` +
-      `:generateContent`;
-    const res = await fetch(url, {
+  if (provider === 'gemini' || free) {
+    const target = geminiTarget({ apiKey, model, free }, 'generateContent');
+    const res = await fetch(target.url, {
       method: 'POST',
       signal,
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      headers: target.headers,
       body: JSON.stringify({
         contents: [{
           role: 'user',
@@ -292,7 +325,7 @@ async function transcribe({ provider, apiKey, model, baseUrl, wav, signal }) {
         generationConfig: { temperature: 0 },
       }),
     });
-    if (!res.ok) await failLoudly(res, 'Gemini transcription');
+    if (!res.ok) await failLoudly(res, target.label || 'Gemini transcription');
     const j = await res.json();
     const parts = j?.candidates?.[0]?.content?.parts || [];
     return parts.filter((p) => p.thought !== true).map((p) => p.text || '').join('').trim();
@@ -399,7 +432,7 @@ function byFreshness(a, b) {
 
 function streamChat(opts) {
   const { provider } = opts;
-  if (provider === 'gemini') return streamGemini(opts);
+  if (provider === 'gemini' || opts.free) return streamGemini(opts);
   if (provider === 'openai') return streamOpenAI(opts, 'OpenAI');
   if (provider === 'custom') {
     if (!opts.baseUrl) throw new Error('Custom provider needs a base URL.');
