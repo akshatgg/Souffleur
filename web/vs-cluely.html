@@ -58,7 +58,7 @@
       "name": "What is the best free alternative to Cluely?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Souffleur is a free, open-source desktop app that does the same core job: an overlay that reads your screen, transcribes the other side of a call, and stays out of the screen share. It is free because you connect your own Gemini or OpenAI API key and pay the provider directly, so there is no subscription and no account. Other open-source options in the same category include OpenCluely and Pluely."
+        "text": "Souffleur is a free, open-source desktop app that does the same core job: an overlay that reads your screen, transcribes the other side of a call, and stays out of the screen share. It is free: it starts on a free key Souffleur provides, up to a daily limit, or you connect your own Gemini or OpenAI API key and pay the provider directly. There is no subscription and no account. Other open-source options in the same category include OpenCluely and Pluely."
       }
     },
     {
@@ -82,7 +82,7 @@
       "name": "Where is Cluely the better choice?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "If you want mobile apps, saved meeting notes and transcripts across a workspace, a signed and notarised installer, a support team to email, and a product that works without you creating an API key, Cluely is the better fit. Souffleur is a single desktop overlay with no account, no mobile app and no support contract."
+        "text": "If you want mobile apps, saved meeting notes and transcripts across a workspace, a signed and notarised installer, a support team to email, and heavy daily use without you creating an API key, Cluely is the better fit. Souffleur is a single desktop overlay with no account, no mobile app and no support contract."
       }
     }
   ]
@@ -168,7 +168,7 @@
     </tr>
     <tr>
       <th scope="row">Where your screen goes</th>
-      <td class="yes">Straight to your own provider</td>
+      <td class="yes">Straight to your own provider, or through Souffleur's server to Gemini on the free key</td>
       <td>Through Cluely's service</td>
     </tr>
     <tr>
@@ -232,8 +232,9 @@
   the case most people are buying it for, is the whole feature.
 </p>
 <p>
-  Souffleur costs nothing and has no plan to be in. What you pay instead is your
-  own API bill: you paste a Gemini or OpenAI key and the provider charges you for
+  Souffleur costs nothing and has no plan to be in. It starts on a free key
+  Souffleur provides, up to a daily limit. Past that, what you pay is your own
+  API bill: you paste a Gemini or OpenAI key and the provider charges you for
   the tokens you use. A screenshot plus a few hundred words of answer is a
   fraction of a cent on current flash-tier models, and Gemini's free tier covers
   a lot of interviews on its own. There is no tier where the invisibility is
@@ -279,7 +280,7 @@
 <ul>
   <li><strong>You want it on your phone.</strong> Cluely has iOS and Android apps. Souffleur is desktop only.</li>
   <li><strong>You want meeting notes that persist.</strong> Cluely records, summarises and keeps transcripts across meetings. Souffleur transcribes into the chat box and forgets.</li>
-  <li><strong>You do not want to handle an API key.</strong> Cluely includes the model in the price. Souffleur asks you to create a key, which takes a few minutes and a payment method at the provider.</li>
+  <li><strong>You use it all day and do not want to handle an API key.</strong> Cluely includes the model in the price. Souffleur's free key has a daily limit; past it, you create a key of your own, which takes a few minutes and a payment method at the provider.</li>
   <li><strong>You want an installer that just opens.</strong> Cluely is signed and notarised. Souffleur is not, so macOS installs go through Homebrew and Windows shows SmartScreen once.</li>
   <li><strong>You want someone to email.</strong> Cluely has support staff. Souffleur has an issue tracker and one maintainer.</li>
 </ul>
@@ -288,7 +289,7 @@
 <ul>
   <li><strong>Invisibility is the feature you came for.</strong> It is included, not a $149.99 upgrade.</li>
   <li><strong>You want to read the code.</strong> The Swift that hides the window, the capture pipeline and the prompts are all in the repository.</li>
-  <li><strong>You do not want your screen crossing someone else's server.</strong> Requests go from your machine to your provider. There is no service in the middle, because there is nothing to run one on.</li>
+  <li><strong>You do not want your screen crossing someone else's server.</strong> With your own key, requests go from your machine to your provider, with no service in the middle. (The free key is the exception: it passes through Souffleur's server to Gemini, which logs none of it.)</li>
   <li><strong>You want to pick the model.</strong> Any Gemini or OpenAI model, or any OpenAI-compatible endpoint — including a local one.</li>
   <li><strong>You want to verify rather than trust.</strong> The test harness ships with the app.</li>
 </ul>
@@ -312,7 +313,8 @@
 <pre><code>brew install --cask akshatgg/tap/souffleur</code></pre>
 <p>
   On Windows, take the <code>.exe</code> from the
-  <a href="/#download">download section</a>. Then paste an API key, and press
+  <a href="/#download">download section</a>. Then ask your first question on the
+  free key, or paste an API key of your own, and press
   <kbd>Shift</kbd>&nbsp;+&nbsp;<kbd>Space</kbd> to show and hide the overlay.
   <a href="/docs">The docs</a> cover providers, shortcuts, call transcription
   and interview mode.

@@ -111,8 +111,9 @@ function welcomeMail(name) {
     `  Windows   ${SITE}/#download`,
     `  Docs      ${SITE}/docs`,
     '',
-    'It is free and open source, it runs on your own API key, and nothing you do',
-    'in it is sent anywhere except to the provider whose key you entered.',
+    'It is free and open source. It works with no setup on our free key, or on',
+    'your own API key, in which case nothing you do in it is sent anywhere except',
+    'to the provider whose key you entered.',
     '',
     'Akshat',
   ].join('\n');
@@ -130,8 +131,9 @@ function welcomeMail(name) {
         <strong>Windows</strong> &middot; <a href="${SITE}/#download">download the installer</a><br>
         <strong>Docs</strong> &middot; <a href="${SITE}/docs">${SITE}/docs</a>
       </p>
-      <p>It is free and open source, it runs on your own API key, and nothing you do
-         in it is sent anywhere except to the provider whose key you entered.</p>
+      <p>It is free and open source. It works with no setup on our free key, or on
+         your own API key, in which case nothing you do in it is sent anywhere
+         except to the provider whose key you entered.</p>
       <p>Akshat</p>
     </div>`;
 

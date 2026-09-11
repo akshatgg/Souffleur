@@ -48,7 +48,14 @@
         </div>
       </div>
       <div class="settings-body">
-        <div class="row">
+        <div class="row" id="rowFree" hidden>
+          <label>API key</label>
+          <div class="free-key">Using Souffleur's free key. Nothing to set up.</div>
+          <button class="add-doc" id="btnOwnKey">Use my own key</button>
+          <div class="note">A key of your own has no daily limit.</div>
+        </div>
+
+        <div class="row" id="rowProvider">
           <label>Provider</label>
           <div class="seg" id="segProvider">
             <button data-p="gemini" aria-pressed="false">Gemini</button>
@@ -63,13 +70,13 @@
           <div class="note">Any OpenAI-compatible endpoint: Groq, Together, OpenRouter, Ollama, LM Studio, vLLM.</div>
         </div>
 
-        <div class="row">
+        <div class="row" id="rowKey">
           <label for="apiKey">API key</label>
           <input type="password" id="apiKey" placeholder="Paste your key" spellcheck="false" autocomplete="off">
           <div class="note" id="keyNote"></div>
         </div>
 
-        <div class="row">
+        <div class="row" id="rowModel">
           <label for="model">Model</label>
           <div class="field-row">
             <select id="model"></select>

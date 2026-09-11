@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Souffleur — Invisible AI Assistant, Hidden From Screen Share</title>
-<meta name="description" content="A free, open-source AI overlay that reads your screen and hears your call, and stays invisible to Zoom, Meet and Teams screen sharing. Bring your own key.">
+<meta name="description" content="A free, open-source AI overlay that reads your screen and hears your call, and stays invisible to Zoom, Meet and Teams screen sharing. No API key needed to start.">
 <link rel="canonical" href="https://getsouffleur.vercel.app/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="author" content="akshatgg">
@@ -81,7 +81,7 @@
         "Screen capture sent to a vision model with one keystroke",
         "System audio transcribed into the chat box as the other person speaks",
         "Interview mode that answers in the first person from your own CV",
-        "Bring your own Gemini, OpenAI or OpenAI-compatible API key",
+        "Free key to start, or your own Gemini, OpenAI or OpenAI-compatible API key",
         "Keys encrypted in the system keychain, with no server in between"
       ],
       "offers": {
@@ -113,7 +113,7 @@
       "name": "Is Souffleur free?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. The app is free and open source, with no account and no subscription. You pay your AI provider directly for the tokens you use, because you connect your own Gemini or OpenAI API key."
+        "text": "Yes. The app is free and open source, with no account and no subscription. It starts on a free key Souffleur provides, up to a daily limit. Past that, you connect your own Gemini or OpenAI API key and pay the provider directly for the tokens you use."
       }
     },
     {
@@ -145,7 +145,7 @@
       "name": "Does Souffleur send my screen or my API key to your servers?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "There are no servers behind the app. Requests go from your machine straight to the provider whose key you entered, and the key itself is encrypted by the operating system keychain. Downloading from this site asks you to sign in with Google, which records your name and email address and nothing else. The app itself collects nothing and never asks you to sign in."
+        "text": "With your own key, requests go from your machine straight to that provider, and the key itself is encrypted by the operating system keychain. Without one, the free key answers: requests pass through Souffleur's server to Google Gemini, which adds our key there. The server logs nothing you send and keeps only a daily count per install, under a hashed id. Downloading from this site asks you to sign in with Google, which records your name and email address and nothing else. The app itself never asks you to sign in."
       }
     }
   ]
@@ -222,7 +222,7 @@
       <a class="btn" href="/docs">Read the docs</a>
     </div>
     <p class="fine">
-      Free and open source. Your own API key. The app runs entirely on your machine.
+      Free and open source. No API key needed to start, or use your own.
       <a href="/vs-cluely" class="inline-link">See how it compares to Cluely →</a>
     </p>
   </div>
@@ -337,11 +337,12 @@
     </p>
   </article>
   <article>
-    <h3>Your key, your data</h3>
+    <h3>Free key, or yours</h3>
     <p>
-      Gemini, OpenAI, or any OpenAI-compatible endpoint. Keys are encrypted in
-      the system keychain. Nothing routes through a server of ours, because
-      there isn't one.
+      Start on the free key with nothing to set up, or bring Gemini, OpenAI or
+      any OpenAI-compatible endpoint. Your own key is encrypted in the system
+      keychain and talks to that provider directly, with no server of ours in
+      between.
     </p>
   </article>
 </section>
@@ -349,7 +350,7 @@
 <section class="download" id="download">
   <h2>Download</h2>
   <p class="lede">
-    Free. Sign up once to download. Bring an API key from whichever provider you prefer.
+    Free. Sign up once to download. No API key needed to start, or bring one from whichever provider you prefer.
     <span class="fine" style="margin:0">Version <span data-version>v0.1.4</span></span>
   </p>
 
@@ -495,10 +496,10 @@
   <details class="qa">
     <summary>Is it free?</summary>
     <p>
-      Yes. Free and open source, no account and no subscription. You pay your AI
-      provider directly for the tokens you use, because you connect your own
-      Gemini or OpenAI key — for most people that is cents per interview rather
-      than a monthly bill.
+      Yes. Free and open source, no account and no subscription. It starts on a
+      free key Souffleur provides, up to a daily limit. Past that, you connect
+      your own Gemini or OpenAI key and pay the provider directly — for most
+      people that is cents per interview rather than a monthly bill.
     </p>
   </details>
 
@@ -537,12 +538,14 @@
   <details class="qa">
     <summary>Does it send my screen or my API key anywhere?</summary>
     <p>
-      There are no servers behind the app. Requests go from your machine
-      straight to the provider whose key you entered, and the key itself is
-      encrypted by the operating system keychain. Downloading from this site
-      asks you to sign in with Google, which records your name and email
-      address and nothing else. The app itself collects nothing and never asks
-      you to sign in.
+      With your own key, requests go from your machine straight to that
+      provider, and the key itself is encrypted by the operating system
+      keychain. Without one, the free key answers: requests pass through
+      Souffleur's server to Google Gemini, which adds our key there. The server
+      logs nothing you send and keeps only a daily count per install, under a
+      hashed id. Downloading from this site asks you to sign in with Google,
+      which records your name and email address and nothing else. The app
+      itself never asks you to sign in.
     </p>
   </details>
 </section>

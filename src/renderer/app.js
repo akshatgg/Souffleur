@@ -9,6 +9,8 @@ let presets = null;
 let keyState = {};
 let keyStatuses = {};
 let modelCache = {};     // provider -> models actually reachable with that key
+let freeOn = false;      // the free key's switch, as the main process last read it
+let showOwnKey = false;  // "Use my own key" was pressed, so the key fields stay open
 let conversation = [];   // [{ role, content }]
 let streaming = null;    // { el, text, raf }
 let busy = false;
@@ -211,7 +213,27 @@ function paintProvider() {
 
   $('apiKey').value = '';
   $('apiKey').placeholder = keyState[p] ? 'Replace saved key' : 'Paste your key';
+  paintKeyRows();
 }
+
+/**
+ * On the free key there is nothing to set up, so provider, key and model fold
+ * away behind "Use my own key". A saved key of the user's own always wins, and
+ * then the fields show as they always have.
+ */
+function paintKeyRows() {
+  const usingFree = freeOn && !keyState[settings.provider];
+  const fold = usingFree && !showOwnKey;
+  $('rowFree').hidden = !usingFree;
+  $('btnOwnKey').hidden = !fold;
+  for (const id of ['rowProvider', 'rowKey', 'rowModel']) $(id).hidden = fold;
+  $('rowBaseUrl').hidden = fold || settings.provider !== 'custom';
+}
+
+window.souffleur.onFreeKey((on) => {
+  freeOn = Boolean(on);
+  if (settings) paintKeyRows();
+});
 
 const MANUAL = '__manual__';
 
@@ -277,6 +299,12 @@ async function refreshModels() {
 
 function wireSettings() {
   $('btnModels').onclick = refreshModels;
+
+  $('btnOwnKey').onclick = () => {
+    showOwnKey = true;
+    paintKeyRows();
+    $('apiKey').focus();
+  };
 
   $('btnSettings').onclick = () => {
     $('settings').hidden = false;
@@ -682,6 +710,7 @@ window.souffleur.onClear(clearChat);
   presets = b.presets;
   keyState = b.keys;
   keyStatuses = b.keyStatuses || {};
+  freeOn = Boolean(b.freeKey);
 
   paintStatus(b.stealth);
 
@@ -730,7 +759,8 @@ window.souffleur.onClear(clearChat);
   paintListening(ls.running);
 
   // No key anywhere yet: open settings rather than failing on the first send.
-  if (!Object.values(keyState).some(Boolean)) {
+  // With the free key on there is nothing to add, so go straight to the chat.
+  if (!Object.values(keyState).some(Boolean) && !freeOn) {
     $('settings').hidden = false;
   } else {
     inputEl.focus();
