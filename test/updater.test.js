@@ -106,6 +106,15 @@ test('an installer from anywhere but our releases is never fetched', async () =>
 });
 
 test('a copy that cannot replace itself says why before downloading', () => {
+  assert.equal(blocker({ platform: 'win32', execPath: 'C:\\Souffleur\\Souffleur.exe', packaged: true }), '');
+  assert.match(blocker({ platform: 'win32', execPath: 'C:\\Souffleur\\Souffleur.exe', packaged: false }),
+    /development copy/);
+  assert.match(blocker({ platform: 'linux', execPath: '/opt/souffleur/souffleur', packaged: true }), /by hand/);
+});
+
+// These walk macOS bundle paths, which only resolve as written on a POSIX
+// machine. CI also runs the suite on Windows, where the code is never reached.
+test('on macOS, only a copy installed somewhere writable replaces itself', { skip: process.platform === 'win32' }, () => {
   const exe = (bundle) => path.join(bundle, 'Contents', 'MacOS', 'Souffleur');
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'souffleur-apps-'));
 
@@ -113,7 +122,6 @@ test('a copy that cannot replace itself says why before downloading', () => {
   assert.equal(macBundle('/usr/local/bin/electron'), null);
 
   assert.equal(blocker({ platform: 'darwin', execPath: exe(path.join(home, 'Souffleur.app')), packaged: true }), '');
-  assert.equal(blocker({ platform: 'win32', execPath: 'C:\\Souffleur\\Souffleur.exe', packaged: true }), '');
 
   assert.match(blocker({ platform: 'darwin', execPath: exe(path.join(home, 'Souffleur.app')), packaged: false }),
     /development copy/);
@@ -123,7 +131,6 @@ test('a copy that cannot replace itself says why before downloading', () => {
     platform: 'darwin', packaged: true,
     execPath: exe('/private/var/folders/x/T/AppTranslocation/ABC/d/Souffleur.app'),
   }), /Applications first/);
-  assert.match(blocker({ platform: 'linux', execPath: '/opt/souffleur/souffleur', packaged: true }), /by hand/);
 
   fs.rmSync(home, { recursive: true, force: true });
 });
