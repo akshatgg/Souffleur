@@ -30,6 +30,10 @@ contextBridge.exposeInMainWorld('souffleur', {
 
   hide: () => ipcRenderer.invoke('window:close'),
 
+  checkUpdate: () => ipcRenderer.invoke('update:check'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  onUpdate: (fn) => ipcRenderer.on('update:state', (_e, u) => fn(u)),
+
   onFreeKey: (fn) => ipcRenderer.on('freekey:state', (_e, on) => fn(on)),
   onDelta: (fn) => ipcRenderer.on('chat:delta', (_e, d) => fn(d)),
   onShot: (fn) => ipcRenderer.on('chat:shot', (_e, s) => fn(s)),

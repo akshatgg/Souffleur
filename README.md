@@ -98,6 +98,17 @@ Download the `.exe` from the
 [latest release](https://github.com/akshatgg/Souffleur/releases/latest).
 SmartScreen warns once: **More info → Run anyway**.
 
+### Updating
+
+Souffleur checks for a newer release when it starts. When there is one, a strip
+appears above the chat: press **Update now** and it downloads the release,
+installs it over the running copy and reopens. The same button is in
+**Settings → Version**, where you can also check by hand.
+
+On macOS the first launch after an update asks for the keychain again, and may
+ask for Screen Recording again — the build is not notarised, so macOS sees each
+version as a new app ([docs/SIGNING.md](docs/SIGNING.md)).
+
 ### After installing
 
 Grant **Screen Recording** on macOS, or the overlay can neither see your screen

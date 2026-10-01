@@ -19,6 +19,11 @@
       </div>
     </div>
 
+    <div class="update" id="update" hidden>
+      <span class="update-text" id="updateText"></span>
+      <button class="primary" id="btnUpdate">Update now</button>
+    </div>
+
     <div class="log" id="log">
       <div class="empty" id="empty">
         Ask anything, or press <kbd>Shift</kbd>+<kbd>S</kbd> to ask about what is on your screen.<br>
@@ -120,6 +125,13 @@
         <div class="row">
           <label for="system">Instructions</label>
           <textarea class="sys" id="system" spellcheck="false"></textarea>
+        </div>
+
+        <div class="row">
+          <label>Version</label>
+          <div class="free-key" id="versionText"></div>
+          <button class="add-doc" id="btnVersion">Check for updates</button>
+          <div class="note" id="versionNote"></div>
         </div>
 
       </div>

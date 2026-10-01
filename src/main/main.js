@@ -1,12 +1,14 @@
 'use strict';
 const { app, BrowserWindow, globalShortcut, ipcMain, screen, shell,
         systemPreferences, desktopCapturer, dialog, session } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
 const { applyStealth, hideFromDock, stealthStatus } = require('./stealth');
 const { streamChat, listModels, transcribe, defaultTranscribeModel, PRESETS } = require('./providers');
 const freekey = require('./freekey');
+const updater = require('./updater');
 const { Listener } = require('./listen');
 const persona = require('./persona');
 const store = require('./store');
@@ -196,6 +198,85 @@ function noteFreeStop(err) {
   if (err?.code === 'free_off') setFreeOn(false);
 }
 
+/* --------------------------------- updates --------------------------------- */
+
+const UPDATE_EVERY = 6 * 60 * 60 * 1000;
+
+// What the renderer paints. `state` is idle, checking, current, available,
+// downloading or installing; `message` is whatever went wrong last.
+let update = { state: 'idle', current: app.getVersion(), version: '', percent: 0, message: '' };
+let latest = null;         // the newer release the last check found, if any
+
+function setUpdate(patch) {
+  update = { ...update, ...patch };
+  if (win && !win.isDestroyed()) win.webContents.send('update:state', update);
+  return update;
+}
+
+// Where an installer is downloaded to. Emptied at launch: by then the update it
+// held is either installed or abandoned, and it is 150 MB either way.
+const updateDir = () => path.join(app.getPath('temp'), 'souffleur-update');
+
+const updateBusy = () => ['checking', 'downloading', 'installing'].includes(update.state);
+
+/**
+ * Look for a newer release. The timer calls this quietly: a laptop that is
+ * offline at launch should not open onto an error about updates, so only a
+ * check somebody asked for reports that it failed.
+ */
+async function checkForUpdate({ quiet = false } = {}) {
+  if (updateBusy()) return update;
+  const before = update.state;
+  setUpdate({ state: 'checking', message: '' });
+  try {
+    const found = await updater.check({ current: update.current });
+    latest = found.newer ? found : null;
+    return setUpdate(latest
+      ? { state: 'available', version: found.version }
+      : { state: 'current', version: '' });
+  } catch (err) {
+    // A failed check does not un-find an update that was already found.
+    const state = latest ? 'available' : before === 'current' ? 'current' : 'idle';
+    return setUpdate({ state, message: quiet ? '' : err.message });
+  }
+}
+
+/** Send the user to the release page, for a copy that cannot replace itself. */
+function updateByHand(why) {
+  shell.openExternal(latest?.page || updater.RELEASES_PAGE).catch(() => {});
+  return setUpdate({ state: 'available', message: `${why} The download page is open in your browser.` });
+}
+
+async function installUpdate() {
+  if (updateBusy()) return update;
+  if (!latest) await checkForUpdate();
+  if (!latest) return update;
+
+  const why = updater.blocker({ packaged: app.isPackaged });
+  if (why) return updateByHand(why);
+  if (!latest.asset) return updateByHand('This release has no installer for this machine.');
+
+  try {
+    setUpdate({ state: 'downloading', percent: 0, message: '' });
+    const file = await updater.download(latest.asset, updateDir(), {
+      onProgress: (p) => {
+        const percent = Math.floor(p * 100);
+        if (percent !== update.percent) setUpdate({ percent });
+      },
+    });
+
+    setUpdate({ state: 'installing' });
+    if (process.platform === 'darwin') await updater.installMac({ dmg: file });
+    else updater.installWin({ exe: file });
+
+    // The installer takes over from here and reopens the app when it is done.
+    setTimeout(() => app.quit(), 400);
+    return update;
+  } catch (err) {
+    return setUpdate({ state: 'available', message: err.message || String(err) });
+  }
+}
+
 /* -------------------------------- listening -------------------------------- */
 
 function transcribeModelFor(s) {
@@ -278,6 +359,7 @@ ipcMain.handle('bootstrap', async () => {
   return {
     settings: store.getSettings(),
     freeKey: freeOn,
+    update,
     presets: PRESETS,
     keys: store.keyPresence(),
     keyStatuses: store.keyStatuses(),
@@ -443,6 +525,9 @@ ipcMain.handle('listen:last', () => {
 
 ipcMain.handle('window:close', () => { win?.hide(); });
 
+ipcMain.handle('update:check', () => checkForUpdate());
+ipcMain.handle('update:install', () => installUpdate());
+
 ipcMain.handle('chat:abort', () => {
   inFlight?.abort();
   inFlight = null;
@@ -536,6 +621,10 @@ if (!app.requestSingleInstanceLock()) {
     refreshSwitch();
     createWindow();
     registerShortcuts();
+
+    fs.promises.rm(updateDir(), { recursive: true, force: true }).catch(() => {});
+    checkForUpdate({ quiet: true });
+    setInterval(() => checkForUpdate({ quiet: true }), UPDATE_EVERY).unref();
 
     if (process.env.SOUFFLEUR_DEBUG === '1') {
       const s = store.getSettings();

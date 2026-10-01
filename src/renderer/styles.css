@@ -110,6 +110,23 @@ body {
 .icon-btn[aria-pressed="true"] { background: var(--field-focus); color: var(--ink); }
 .icon-btn:focus-visible { outline: 2px solid var(--rule-strong); outline-offset: 1px; }
 
+/* ---- update strip: only there when a newer release exists ---- */
+
+.update {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px 7px 12px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--field);
+}
+.update[hidden] { display: none; }
+.update-text { flex: 1; font-size: var(--fs-meta); color: var(--ink-dim); }
+.update-text.warn { color: var(--alarm); }
+.update .primary { flex: none; padding: 4px 12px; font-size: var(--fs-meta); }
+.primary[disabled] { opacity: 0.45; cursor: default; }
+
 /* ---- transcript ---- */
 
 .log {
