@@ -4,7 +4,7 @@
   "description": "A hidden prompter for calls: sees your screen, hears the room, invisible to screen share",
   "main": "src/main/main.js",
   "scripts": {
-    "test": "eslint . && node --test test/sse.test.js test/listen.test.js test/report.test.js test/freekey.test.js test/free-rules.test.js",
+    "test": "eslint . && node --test test/sse.test.js test/listen.test.js test/report.test.js test/freekey.test.js test/free-rules.test.js test/updater.test.js",
     "start": "electron .",
     "dev": "electron . --enable-logging",
     "debug": "SOUFFLEUR_DEBUG=1 electron .",

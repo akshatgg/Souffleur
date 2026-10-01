@@ -369,6 +369,52 @@ function wireSettings() {
   $('system').addEventListener('change', (e) => patch({ system: e.target.value }));
 }
 
+/* --------------------------------- updates --------------------------------- */
+
+let update = null;       // as the main process last reported it
+
+/**
+ * The same state painted twice: a strip above the chat that appears only when
+ * there is something to install, and a row in settings that is always there.
+ * Both buttons do the same thing.
+ */
+function paintUpdate(u) {
+  update = u;
+  const working = u.state === 'downloading' || u.state === 'installing';
+  const progress = u.state === 'downloading'
+    ? `Downloading ${u.version} \u00b7 ${u.percent}%`
+    : 'Installing. Souffleur will reopen in a moment.';
+
+  $('update').hidden = !(u.state === 'available' || working);
+  $('updateText').textContent = working ? progress : u.message || `Version ${u.version} is available`;
+  $('updateText').classList.toggle('warn', !working && Boolean(u.message));
+  $('btnUpdate').disabled = working;
+  $('btnUpdate').textContent = u.message && !working ? 'Try again' : 'Update now';
+
+  $('versionText').textContent = `Souffleur ${u.current}`;
+  const btn = $('btnVersion');
+  btn.disabled = working || u.state === 'checking';
+  btn.textContent = u.state === 'checking' ? 'Checking\u2026'
+    : working || u.state === 'available' ? `Update now to ${u.version}`
+    : 'Check for updates';
+
+  const note = $('versionNote');
+  note.className = u.message && !working ? 'note warn' : 'note';
+  note.textContent = working ? progress
+    : u.message ? u.message
+    : u.state === 'current' ? 'You have the latest version.'
+    : u.state === 'available' ? 'Downloads the new version, installs it and reopens Souffleur.'
+    : '';
+}
+
+function wireUpdate() {
+  window.souffleur.onUpdate(paintUpdate);
+  $('btnUpdate').onclick = () => window.souffleur.installUpdate();
+  $('btnVersion').onclick = () => (update && update.state === 'available'
+    ? window.souffleur.installUpdate()
+    : window.souffleur.checkUpdate());
+}
+
 /* --------------------------- persona documents ---------------------------- */
 
 let docs = [];
@@ -750,6 +796,8 @@ window.souffleur.onClear(clearChat);
   wireSettings();
   wirePersona();
   wireInput();
+  wireUpdate();
+  paintUpdate(b.update);
   autoGrow();
 
   paintHotkey();
