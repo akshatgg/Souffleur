@@ -12,15 +12,28 @@ import { readFile, writeFile } from 'node:fs/promises';
 
 const REPO = 'akshatgg/Souffleur';
 
+// While the repository is private the release cannot be read anonymously, so a
+// token is used when there is one (the release workflow passes its own).
+const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
+const auth = TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {};
+
 async function sha256(url) {
-  const res = await fetch(url, { redirect: 'follow' });
+  const res = await fetch(url, {
+    redirect: 'follow',
+    headers: { ...auth, Accept: 'application/octet-stream' },
+  });
   if (!res.ok) throw new Error(`${res.status} fetching ${url}`);
   const hash = createHash('sha256');
   for await (const chunk of res.body) hash.update(chunk);
   return hash.digest('hex');
 }
 
-const rel = await (await fetch(`https://api.github.com/repos/${REPO}/releases/latest`)).json();
+const relRes = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: auth });
+if (!relRes.ok) {
+  throw new Error(`${relRes.status} reading the latest release` +
+    (TOKEN ? '' : ' (the repository is private: set GITHUB_TOKEN)'));
+}
+const rel = await relRes.json();
 const version = String(rel.tag_name).replace(/^v/, '');
 const asset = (re) => rel.assets.find((a) => re.test(a.name));
 
@@ -30,8 +43,8 @@ if (!arm || !x64) throw new Error('release is missing one of the DMGs');
 
 process.stdout.write(`hashing ${version}\n`);
 const [armSha, x64Sha] = await Promise.all([
-  sha256(arm.browser_download_url),
-  sha256(x64.browser_download_url),
+  sha256(arm.url),      // the API address: it is the one a token can download
+  sha256(x64.url),
 ]);
 
 const out = (await readFile('packaging/souffleur.rb', 'utf8'))
@@ -50,4 +63,4 @@ await writeFile('packaging/souffleur.rb', fixed);
 console.log(`souffleur ${version}`);
 console.log(`  arm64 ${armSha}`);
 console.log(`  x64   ${x64Sha}`);
-console.log('\nCopy packaging/souffleur.rb to Casks/souffleur.rb in akshatgg/homebrew-tap');
+console.log('\nThe release workflow copies packaging/souffleur.rb to Casks/souffleur.rb in akshatgg/homebrew-tap.');
