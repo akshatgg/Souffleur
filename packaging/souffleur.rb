@@ -11,17 +11,17 @@
 # see docs/SIGNING.md.
 #
 # Lives in the akshatgg/homebrew-tap repository as Casks/souffleur.rb.
-# Regenerate with: npm run cask:update
+# The release workflow regenerates and publishes it; by hand: npm run cask:update
 
 cask "souffleur" do
-  version "0.1.4"
+  version "0.1.6"
 
   on_arm do
-    sha256 "9d6bffe242ec4c53283f5343b8a50214fa864546b30a2f0101bc93bff5f21a49"
+    sha256 "b5abdf4c05a83d143d00c52974b5f3ba07492d5f26e4a011827305569a029849"
     url "https://github.com/akshatgg/Souffleur/releases/download/v#{version}/Souffleur-#{version}-arm64.dmg"
   end
   on_intel do
-    sha256 "c645aff5475e2ec4ccfd1b17650f489d083a70cd3b4a0b07c78ba730878bd129"
+    sha256 "50dbbe5fcd2d20731117f6dc7e0bf9378c6f7ed1d889cfaf1907bab97b5cfdf8"
     url "https://github.com/akshatgg/Souffleur/releases/download/v#{version}/Souffleur-#{version}.dmg"
   end
 
@@ -36,10 +36,10 @@ cask "souffleur" do
   # The build is signed but not notarised, so macOS refuses it on first launch
   # while the quarantine flag is set. Clearing it here is what makes a plain
   # `brew install --cask` open without a dialog.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Souffleur.app"],
-                   must_succeed: false
+  postflight_steps do
+    run "/usr/bin/xattr",
+        args:         ["-dr", "com.apple.quarantine", "{{appdir}}/Souffleur.app"],
+        must_succeed: false
   end
 
   uninstall quit: "com.akshatgg.souffleur"
