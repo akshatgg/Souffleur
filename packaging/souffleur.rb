@@ -18,11 +18,11 @@ cask "souffleur" do
 
   on_arm do
     sha256 "b5abdf4c05a83d143d00c52974b5f3ba07492d5f26e4a011827305569a029849"
-    url "https://github.com/akshatgg/Souffleur/releases/download/v#{version}/Souffleur-#{version}-arm64.dmg"
+    url "https://github.com/akshatgg/souffleur-releases/releases/download/v#{version}/Souffleur-#{version}-arm64.dmg"
   end
   on_intel do
     sha256 "50dbbe5fcd2d20731117f6dc7e0bf9378c6f7ed1d889cfaf1907bab97b5cfdf8"
-    url "https://github.com/akshatgg/Souffleur/releases/download/v#{version}/Souffleur-#{version}.dmg"
+    url "https://github.com/akshatgg/souffleur-releases/releases/download/v#{version}/Souffleur-#{version}.dmg"
   end
 
   name "Souffleur"

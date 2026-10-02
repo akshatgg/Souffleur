@@ -17,7 +17,7 @@
 
 import { readFile, writeFile } from 'node:fs/promises';
 
-const REPO = 'akshatgg/Souffleur';
+const REPO = 'akshatgg/souffleur-releases';
 const PAGE = 'web/index.html';
 const SITEMAP = 'web/sitemap.xml';
 

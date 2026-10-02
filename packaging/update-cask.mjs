@@ -10,10 +10,10 @@
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 
-const REPO = 'akshatgg/Souffleur';
+const REPO = 'akshatgg/souffleur-releases';
 
-// While the repository is private the release cannot be read anonymously, so a
-// token is used when there is one (the release workflow passes its own).
+// The installers live in a public repository, so no token is needed. One is
+// still sent when present: it lifts the anonymous rate limit on CI runners.
 const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
 const auth = TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {};
 
@@ -30,8 +30,7 @@ async function sha256(url) {
 
 const relRes = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: auth });
 if (!relRes.ok) {
-  throw new Error(`${relRes.status} reading the latest release` +
-    (TOKEN ? '' : ' (the repository is private: set GITHUB_TOKEN)'));
+  throw new Error(`${relRes.status} reading the latest release`);
 }
 const rel = await relRes.json();
 const version = String(rel.tag_name).replace(/^v/, '');
@@ -43,7 +42,7 @@ if (!arm || !x64) throw new Error('release is missing one of the DMGs');
 
 process.stdout.write(`hashing ${version}\n`);
 const [armSha, x64Sha] = await Promise.all([
-  sha256(arm.url),      // the API address: it is the one a token can download
+  sha256(arm.url),
   sha256(x64.url),
 ]);
 

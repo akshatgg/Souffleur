@@ -229,11 +229,44 @@ jobs:
             Then grant **Screen Recording** on macOS, or the overlay cannot see
             your screen or hear the call. Audio capture is macOS-only for now.
 
+      # This repository is private, and nobody can download a private
+      # repository's release without signing in: brew, the in-app updater and
+      # the site all got a 404. The installers are therefore also published to
+      # akshatgg/souffleur-releases, a public repository that holds nothing
+      # else, and that is where everything downloads from.
+      #
+      # It is another repository, which this run's own token cannot write to.
+      # PUBLISH_TOKEN is a token that can: contents read and write on
+      # akshatgg/souffleur-releases and akshatgg/homebrew-tap, nothing else.
+      # Without it this step says so and the release stays private-only.
+      - name: Publish the installers where anyone can download them
+        id: public
+        env:
+          GH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::PUBLISH_TOKEN is not set, so this release was not published to akshatgg/souffleur-releases. Nobody can download it until it is."
+            echo "done=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          v="${{ needs.prepare.outputs.version }}"
+          repo="akshatgg/souffleur-releases"
+          mapfile -t files < <(find artifacts -type f \( -name '*.dmg' -o -name '*.exe' \))
+          if gh release view "v$v" --repo "$repo" >/dev/null 2>&1; then
+            gh release upload "v$v" --repo "$repo" --clobber "${files[@]}"
+          else
+            gh release create "v$v" --repo "$repo" --title "Souffleur $v" \
+              --notes-file packaging/release-notes.md "${files[@]}"
+          fi
+          echo "done=true" >> "$GITHUB_OUTPUT"
+
       # The site's download links are baked into the HTML so a click works even
       # when the GitHub API is slow. That means they go stale unless something
       # updates them -- and they did, serving 0.1.2 for two releases while the
       # Homebrew cask was current. Doing it here makes drift impossible.
       - name: Point the site at this release
+        if: steps.public.outputs.done == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -253,24 +286,16 @@ jobs:
       # out whatever release it was last told about. It was left on 0.1.4 for
       # two releases, because updating it was a command someone had to remember
       # to run. Doing it here means a new release is what Homebrew installs.
-      #
-      # The tap is another repository, which this run's own token cannot write
-      # to. TAP_TOKEN is a token that can: contents read and write on
-      # akshatgg/homebrew-tap, nothing else. Without it the step says so and
-      # the release still succeeds.
       - name: Point the Homebrew cask at this release
+        if: steps.public.outputs.done == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
         run: |
           set -euo pipefail
-          if [ -z "${TAP_TOKEN}" ]; then
-            echo "::warning::TAP_TOKEN is not set, so the Homebrew cask was not updated. Run: npm run cask:update, then copy packaging/souffleur.rb to the tap."
-            exit 0
-          fi
           npm run cask:update
           tap="$RUNNER_TEMP/tap"
-          git clone --depth 1 "https://x-access-token:${TAP_TOKEN}@github.com/akshatgg/homebrew-tap.git" "$tap"
+          git clone --depth 1 "https://x-access-token:${PUBLISH_TOKEN}@github.com/akshatgg/homebrew-tap.git" "$tap"
           cp packaging/souffleur.rb "$tap/Casks/souffleur.rb"
           cd "$tap"
           if git diff --quiet; then

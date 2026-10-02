@@ -13,7 +13,7 @@ const { isNewer, pickAsset, check, download, blocker, macBundle } = require('../
  * No network; fetch is stubbed.
  */
 
-const BASE = 'https://github.com/akshatgg/Souffleur/releases/download/v0.2.0/';
+const BASE = 'https://github.com/akshatgg/souffleur-releases/releases/download/v0.2.0/';
 const asset = (name, extra = {}) => ({ name, browser_download_url: BASE + name, size: 10, ...extra });
 const ASSETS = [
   asset('Souffleur-0.2.0-arm64.dmg'),
