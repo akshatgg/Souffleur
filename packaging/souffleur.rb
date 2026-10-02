@@ -14,14 +14,14 @@
 # The release workflow regenerates and publishes it; by hand: npm run cask:update
 
 cask "souffleur" do
-  version "0.1.6"
+  version "0.1.7"
 
   on_arm do
-    sha256 "b5abdf4c05a83d143d00c52974b5f3ba07492d5f26e4a011827305569a029849"
+    sha256 "34bc1be6f36f837e80cb44064bae375d6d2eac0b22febc906e29619084d28153"
     url "https://github.com/akshatgg/souffleur-releases/releases/download/v#{version}/Souffleur-#{version}-arm64.dmg"
   end
   on_intel do
-    sha256 "50dbbe5fcd2d20731117f6dc7e0bf9378c6f7ed1d889cfaf1907bab97b5cfdf8"
+    sha256 "a57fa3f8117038a135d40068e5e0039922018dfec18992c08e9b40ecb93c2a4c"
     url "https://github.com/akshatgg/souffleur-releases/releases/download/v#{version}/Souffleur-#{version}.dmg"
   end
 
