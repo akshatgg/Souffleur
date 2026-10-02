@@ -274,18 +274,25 @@ npm start</code></pre>
 
 <h2>Interview mode</h2>
 <p>
-  Add up to <strong>four PDFs</strong> describing you — CV, portfolio, work history — and
-  Souffleur answers in the first person as you, from your real background.
+  Add up to <strong>ten PDFs</strong> describing you — your CV, then a write-up for each
+  project — and Souffleur answers in the first person as you, from your real background.
 </p>
 
 <ol>
   <li>Settings → <strong>Documents about you</strong> → <strong>Add PDF</strong></li>
-  <li>Turn on <strong>Interview mode</strong></li>
+  <li><strong>Interview mode</strong> turns on with the first document; switch it off there to go back to the plain assistant</li>
   <li>Your name is read from the first document; correct it if it's wrong</li>
   <li><strong>Save</strong></li>
 </ol>
 
 <p>Answers become spoken-length and first person, the way someone actually talks in a room, and technical questions are answered concretely.</p>
+
+<p>Each question is sorted before it is answered:</p>
+<ul>
+  <li><strong>A knowledge question</strong> — "What is PostgreSQL?" — is answered on its own. Your documents are not read, so the answer does not wander into your projects.</li>
+  <li><strong>A question about you or your work</strong> — "How did you use PostgreSQL in that project?" — gets the sections of your documents that match it. The answer says what you did, then explains the technology behind it.</li>
+  <li><strong>Something your documents don't cover</strong> still gets an answer: what the thing is and how you would use it, said as what you'd do and not as something you did.</li>
+</ul>
 
 <div class="callout">
   <p>
@@ -297,7 +304,7 @@ npm start</code></pre>
   </p>
 </div>
 
-<p>Text is extracted once when you upload, not re-sent with every message. Scanned PDFs with no text layer are rejected — they'd need OCR.</p>
+<p>Text is extracted once when you upload. Only the sections a question is about are sent with it, never the whole set. Scanned PDFs with no text layer are rejected — they'd need OCR.</p>
 
 <h2>Is it really hidden?</h2>
 <p>
