@@ -444,8 +444,8 @@ function paintDocs(suggestedName) {
   const note = $('docNote');
   if (!note.classList.contains('warn')) {
     note.textContent = docs.length
-      ? `${docs.length} of ${maxDocs}. Your CV, portfolio and anything describing your work.`
-      : `Up to ${maxDocs} PDFs. Interview mode answers from these, so add your CV first.`;
+      ? `${docs.length} of ${maxDocs}. Your CV first, then a write-up for each project.`
+      : `Up to ${maxDocs} PDFs. Interview mode answers questions about you from these, so add your CV first.`;
   }
   if (suggestedName && !$('personaName').value) $('personaName').placeholder = suggestedName;
 }
@@ -476,6 +476,7 @@ function wirePersona() {
     const note = $('docNote');
     note.className = 'note';
     note.textContent = 'Reading\u2026';
+    const had = docs.length;
     const res = await window.souffleur.addDocs();
     docs = res.docs || docs;
     if (res.error) {
@@ -483,6 +484,12 @@ function wirePersona() {
       note.textContent = res.error;
     } else {
       note.className = 'note';
+    }
+    // Adding the first document is the decision to be answered from it, so it
+    // should not also need a second switch that is easy to miss.
+    if (!had && docs.length && !settings.interviewMode) {
+      await patch({ interviewMode: true });
+      paintInterview();
     }
     paintDocs(res.suggestedName);
   };

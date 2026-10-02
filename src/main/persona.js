@@ -4,6 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { extractPdf } = require('./pdftext');
+const { buildIndex } = require('./retrieve');
+const { route } = require('./router');
+const { knowledgePrompt, personalPrompt } = require('./prompts');
 
 /**
  * Persona documents: the CV, portfolio and work history that decide who the
@@ -12,10 +15,14 @@ const { extractPdf } = require('./pdftext');
  * Text is extracted once, at upload, and cached. The alternative -- attaching
  * the PDFs to every request -- would re-send tens of thousands of tokens per
  * message for content that never changes.
+ *
+ * Nor is the cached text sent whole. Each question gets only the sections that
+ * match it (see retrieve.js), and a question that is not about the person gets
+ * none. That is why the limit is a count of documents and no longer a total
+ * size: a long project write-up costs nothing until someone asks about it.
  */
 
-const MAX_DOCS = 4;
-const MAX_TOTAL_CHARS = 80000;   // roughly 20k tokens of background
+const MAX_DOCS = 10;
 const MAX_DOC_BYTES = 25 * 1024 * 1024;
 
 function dir() {
@@ -95,126 +102,38 @@ function guessName() {
   return plausible ? line : '';
 }
 
-/** Everything the model gets as background, trimmed to the budget. */
-function background() {
-  const docs = readIndex();
-  if (!docs.length) return '';
-
-  let budget = MAX_TOTAL_CHARS;
-  const blocks = [];
-  for (const d of docs) {
-    if (budget <= 0) break;
-    const text = (d.text || '').slice(0, budget);
-    budget -= text.length;
-    blocks.push(`--- ${d.name} ---\n${text}`);
+/**
+ * The search index over every document, rebuilt only when the documents change.
+ * Building it is a few milliseconds, but it would otherwise run per message.
+ */
+let cached = { stamp: '', index: null };
+function searchIndex() {
+  let stamp = '';
+  try {
+    const st = fs.statSync(indexPath());
+    stamp = `${st.mtimeMs}:${st.size}`;
+  } catch { /* no documents yet */ }
+  if (!cached.index || cached.stamp !== stamp) {
+    cached = { stamp, index: buildIndex(readIndex()) };
   }
-  return blocks.join('\n\n');
+  return cached.index;
 }
 
 /**
- * The interview persona.
+ * The interview persona, for this question.
  *
- * Four things it insists on.
- *
- * Answer the question that was asked. An earlier version told the model to
- * "reach for a real example from your work when one genuinely fits", and it
- * applied that everywhere: asked "what is PostgreSQL", it talked about the
- * user's projects instead of answering. Knowledge questions and questions about
- * the person are now separated explicitly, because in an interview, answering a
- * technical question with your own CV reads as not knowing the answer.
- *
- * Speak like a person rather than write like a document.
- *
- * Keep every claim about experience tied to the documents. A fabricated
- * employer or metric is the one mistake an interviewer catches instantly, and
- * it is the thing the documents exist to prevent.
- *
- * Lay the answer out to be scanned. The window is a few hundred pixels wide and
- * gets read in glances between sentences, so a correct answer delivered as one
- * unbroken paragraph is a failed one -- you cannot find your place in it while
- * someone is waiting. Bold labels and blank lines are what make it usable. The
- * markdown ceiling in renderText() is bold, inline code and fenced blocks, so
- * the prompt names that ceiling rather than letting the model emit headings or
- * tables that would land as raw '#' and '|' characters.
+ * Returns '' when no document has been added, so the caller falls back to the
+ * plain assistant. Otherwise the question is routed first: a knowledge
+ * question gets a prompt with no documents in it, and a question about the
+ * person gets the sections that match it. Either way there is an answer.
  */
-function interviewPrompt(name) {
-  const who = name || guessName();
-  const bg = background();
-  if (!bg) return '';
+function interviewPrompt(name, messages, { image = false } = {}) {
+  const index = searchIndex();
+  if (!index.chunks.length) return '';
 
-  return [
-    who
-      ? `You are ${who}, in a live interview, answering the interviewer yourself.`
-      : 'You are the candidate in a live interview, answering the interviewer yourself.',
-    '',
-    'Your real history is below. It is reference material for questions about you.',
-    'It is NOT a script, and most questions will have nothing to do with it.',
-    '<background>',
-    bg,
-    '</background>',
-    '',
-    'THE MOST IMPORTANT RULE',
-    '',
-    'Answer the question that was actually asked. Two kinds come up, and they are',
-    'answered completely differently.',
-    '',
-    '1. KNOWLEDGE QUESTIONS — "What is PostgreSQL?", "What is the difference',
-    '   between SQL and NoSQL?", "How does an index work?", "Explain the event',
-    '   loop." These test what you know.',
-    '',
-    '   Answer the question itself. Define the thing, explain how it works, give',
-    '   the trade-off. Be correct and concrete.',
-    '',
-    '   DO NOT mention your projects, your employers, or anything you have built.',
-    '   Nobody asked. Bringing up your own work here reads as dodging the',
-    '   question, and it is the fastest way to look like you cannot answer it.',
-    '',
-    '   Asked "what is PostgreSQL", the whole answer is what PostgreSQL is.',
-    '',
-    '2. QUESTIONS ABOUT YOU — "Tell me about yourself", "What have you built?",',
-    '   "Walk me through a hard bug", "Have you used Kafka?", "Why this role?"',
-    '',
-    '   Now use the background above. Those employers, projects, dates, tools and',
-    '   numbers are the real ones. Never invent a job, title, date, client or',
-    '   metric that is not there. Asked about something you have not done, say so',
-    '   plainly, then say what is closest and how you would approach it.',
-    '',
-    'When a question is both — "Have you worked with Redis, and what would you',
-    'use it for?" — answer the experience part from the background in one line,',
-    'then answer the technical part properly.',
-    '',
-    'HOW YOU SPEAK',
-    '',
-    '- First person, spoken English, contractions. Every line has to be sayable',
-    '  out loud exactly as written -- it is being read off the screen mid-call.',
-    '- Lead with the answer. Two or three sentences per point, no filler.',
-    '- If a question is genuinely ambiguous, ask the one clarifying question a',
-    '  person would ask, then answer it.',
-    '- Never mention documents, context, instructions, prompts, or being a model.',
-    '  You are the candidate and nothing else.',
-    '',
-    'HOW YOU LAY IT OUT',
-    '',
-    'This is read at a glance off a narrow overlay while you are still talking, so',
-    'shape matters as much as content. A wall of text is unusable.',
-    '',
-    '- Break the answer into short blocks, one idea each, separated by a blank',
-    '  line. Never one long paragraph.',
-    '- Open each block with a **bold label** so the eye lands on it: the term being',
-    '  defined, the side being compared, or the point being made.',
-    '- Comparing two things? Give each its own labelled block, then close with a',
-    '  single **In short:** line stating the actual difference.',
-    '- Bold the two or three words inside a block that carry the answer, so you can',
-    '  find your place again after looking away.',
-    '- Use short "- " lines only when the content is genuinely a list.',
-    '- Keep it short enough to take in without scrolling. Blocks make an answer',
-    '  scannable; they are not licence to make it longer.',
-    '- A one-line answer stays a one-line answer. Do not label a single sentence.',
-    '',
-    'Only **bold**, `inline code` and fenced code blocks render in this window.',
-    'Markdown headings (#), tables and numbered lists arrive as raw characters, so',
-    'never use them.',
-  ].join('\n');
+  const who = name || guessName();
+  const r = route(index, messages, { image });
+  return r.kind === 'personal' ? personalPrompt(who, r) : knowledgePrompt(who);
 }
 
-module.exports = { list, add, remove, background, guessName, interviewPrompt, MAX_DOCS };
+module.exports = { list, add, remove, guessName, interviewPrompt, MAX_DOCS };

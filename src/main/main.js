@@ -330,10 +330,13 @@ function ensureListener() {
  * It falls back to the plain assistant prompt when no document has been added,
  * so turning the toggle on before uploading anything cannot produce a persona
  * with no history to stand on.
+ *
+ * The prompt depends on the question: the documents are searched for what was
+ * asked, and only the matching sections go with it (see persona.js).
  */
-function systemPrompt(s) {
+function systemPrompt(s, messages, image) {
   if (s.interviewMode) {
-    const p = persona.interviewPrompt(s.personaName);
+    const p = persona.interviewPrompt(s.personaName, messages, { image: Boolean(image) });
     if (p) return p;
   }
   return s.system;
@@ -583,7 +586,7 @@ ipcMain.handle('chat:send', async (event, { messages, withScreenshot }) => {
     let any = false;
     const stream = streamChat({
       ...route,
-      system: systemPrompt(s) + transcriptContext(),
+      system: systemPrompt(s, messages, image) + transcriptContext(),
       messages,
       image,
       signal: ctrl.signal,
