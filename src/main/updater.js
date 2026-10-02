@@ -26,10 +26,13 @@ const run = promisify(execFile);
  * Nothing here touches Electron, so the tests can load it under plain Node.
  */
 
-const REPO = 'akshatgg/Souffleur';
+// The source repository is private, and a private repository's releases cannot
+// be read or downloaded without signing in. The installers are published to
+// this public one, which holds nothing else.
+const REPO = 'akshatgg/souffleur-releases';
 const LATEST_URL = `https://api.github.com/repos/${REPO}/releases/latest`;
 const RELEASES_PAGE = `https://github.com/${REPO}/releases/latest`;
-// Installers are only ever taken from this repository's own releases.
+// Installers are only ever taken from that repository's releases.
 const DOWNLOADS = `https://github.com/${REPO}/releases/download/`;
 const BUNDLE_ID = 'com.akshatgg.souffleur';
 

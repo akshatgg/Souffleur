@@ -1,6 +1,6 @@
 /* Souffleur site: OS-aware download links, and parallax on the hero rig. */
 
-const REPO = 'https://github.com/akshatgg/Souffleur';
+const REPO = 'https://github.com/akshatgg/souffleur-releases';
 const LATEST = `${REPO}/releases/latest`;
 
 /* ------------------------------ downloads ------------------------------- */
@@ -52,7 +52,7 @@ async function wireDownloads() {
 
   // Keep the Windows link pointing at the newest installer.
   try {
-    const res = await fetch('https://api.github.com/repos/akshatgg/Souffleur/releases/latest');
+    const res = await fetch('https://api.github.com/repos/akshatgg/souffleur-releases/releases/latest');
     if (!res.ok) return;
     const rel = await res.json();
     const exe = (rel.assets || []).find((a) => /\.exe$/i.test(a.name));

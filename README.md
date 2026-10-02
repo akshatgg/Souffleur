@@ -4,7 +4,7 @@ A *souffleur* is the theatre prompter who sits hidden in a box below the stage
 and feeds actors their forgotten lines. The audience never sees them.
 
 **[getsouffleur.vercel.app](https://getsouffleur.vercel.app)** &nbsp;·&nbsp;
-[Download](https://github.com/akshatgg/Souffleur/releases/latest) &nbsp;·&nbsp;
+[Download](https://github.com/akshatgg/souffleur-releases/releases/latest) &nbsp;·&nbsp;
 [Docs](https://getsouffleur.vercel.app/docs)
 
 This is that, for calls. A small always-on-top window that sees your screen,
@@ -95,7 +95,7 @@ command is the recommended route.
 ### Windows
 
 Download the `.exe` from the
-[latest release](https://github.com/akshatgg/Souffleur/releases/latest).
+[latest release](https://github.com/akshatgg/souffleur-releases/releases/latest).
 SmartScreen warns once: **More info → Run anyway**.
 
 ### Updating
