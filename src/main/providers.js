@@ -7,6 +7,8 @@
  *   openai  -> api.openai.com
  *   custom  -> any OpenAI-compatible base URL (Groq, Together, OpenRouter,
  *              Ollama, LM Studio, vLLM, Azure ...)
+ *   anthropic   -> Claude on the user's API key (claude.js)
+ *   claude-code -> Claude through the user's signed-in Claude Code CLI (claudecode.js)
  *
  * Every provider streams, and every one takes an optional screenshot.
  * A user's own key never leaves this machine except to the provider they
@@ -15,6 +17,8 @@
  */
 
 const { FREE_URL } = require('./freekey');
+const { streamClaude, listClaudeModels, DEFAULT_MODEL: CLAUDE_DEFAULT } = require('./claude');
+const { streamClaudeCode, listClaudeCodeModels, MODELS: CLAUDE_CODE_MODELS } = require('./claudecode');
 
 // Set SOUFFLEUR_DEBUG=1 to log response shapes (never keys) to the Electron console.
 const DEBUG = process.env.SOUFFLEUR_DEBUG === '1';
@@ -40,6 +44,23 @@ const PRESETS = {
     models: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o'],
     keyUrl: 'https://platform.openai.com/api-keys',
     vision: true,
+  },
+  anthropic: {
+    label: 'Claude',
+    defaultModel: CLAUDE_DEFAULT,
+    models: [CLAUDE_DEFAULT, 'claude-sonnet-5-5', 'claude-haiku-4-5'],
+    keyUrl: 'https://console.anthropic.com/settings/keys',
+    vision: true,
+    hears: false,
+  },
+  'claude-code': {
+    label: 'Claude Code',
+    defaultModel: 'opus',
+    models: CLAUDE_CODE_MODELS,
+    keyUrl: 'https://claude.com/claude-code',
+    vision: true,
+    hears: false,
+    noKey: true,
   },
   custom: {
     label: 'OpenAI-compatible',
@@ -369,7 +390,9 @@ function defaultTranscribeModel(provider, available) {
  * Newest-looking names are sorted first so the default pick stays current.
  */
 async function listModels({ provider, apiKey, baseUrl, signal }) {
+  if (provider === 'claude-code') return listClaudeCodeModels();
   if (!apiKey) throw new Error('Set an API key first.');
+  if (provider === 'anthropic') return listClaudeModels({ apiKey, signal });
 
   if (provider === 'gemini') {
     const res = await fetch(
@@ -434,6 +457,8 @@ function streamChat(opts) {
   const { provider } = opts;
   if (provider === 'gemini' || opts.free) return streamGemini(opts);
   if (provider === 'openai') return streamOpenAI(opts, 'OpenAI');
+  if (provider === 'anthropic') return streamClaude(opts);
+  if (provider === 'claude-code') return streamClaudeCode(opts);
   if (provider === 'custom') {
     if (!opts.baseUrl) throw new Error('Custom provider needs a base URL.');
     return streamOpenAI(opts, 'Custom endpoint');

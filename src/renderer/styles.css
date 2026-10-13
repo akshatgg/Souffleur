@@ -375,9 +375,10 @@ textarea.sys { resize: vertical; min-height: 62px; line-height: 1.45; }
 .key-row input { text-align: center; font-size: 12px; }
 .key-row input.bad { border-color: var(--alarm); color: var(--alarm); }
 
-.seg { display: flex; gap: 4px; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; }
 .seg button {
   flex: 1;
+  min-width: max-content;
   appearance: none;
   background: var(--field);
   border: 1px solid transparent;

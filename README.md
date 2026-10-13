@@ -27,7 +27,8 @@ and nothing is sent anywhere except to the provider you pick.
 
 ## What it does
 
-- **Chat** with Gemini, OpenAI, or any OpenAI-compatible endpoint
+- **Chat** with Gemini, OpenAI, Claude, or any OpenAI-compatible endpoint — or
+  through Claude Code, if it is installed and signed in, with no key at all
 - **Ask about your screen** — one hotkey captures it and sends it with your question
 - **Hears the call** — transcribes what the other party says, straight into the
   chat box so you can send it with one Enter

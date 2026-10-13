@@ -199,17 +199,34 @@ function paintProvider() {
   const preset = presets[p] || {};
   paintModels(modelCache[p] || preset.models || []);
 
-  const link = preset.keyUrl
-    ? ' <a href="' + esc(preset.keyUrl) + '" target="_blank" rel="noreferrer">Get a key</a>'
+  // Claude cannot take audio; say so where the key is chosen, not mid-call.
+  const deaf = preset.hears === false
+    ? ' Claude cannot hear audio, so listening to the call uses a Gemini or OpenAI key if you saved one, or the free key.'
     : '';
-  const status = keyStatuses[p] || (keyState[p] ? 'ok' : 'none');
-  const said = status === 'ok'
-    ? 'A key is saved for this provider.'
-    : status === 'unreadable'
-      ? 'A saved key exists but can no longer be decrypted \u2014 the app was renamed. Paste it again.'
-      : 'No key saved yet.';
-  $('keyNote').innerHTML = said + link;
-  $('keyNote').className = status === 'unreadable' ? 'note warn' : 'note';
+
+  $('apiKey').hidden = Boolean(preset.noKey);
+  $('keyLabel').textContent = preset.noKey ? preset.label : 'API key';
+
+  if (preset.noKey) {
+    const install = ' <a href="' + esc(preset.keyUrl) + '" target="_blank" rel="noreferrer">Get Claude Code</a>';
+    $('keyNote').innerHTML = keyState[p]
+      ? 'Answers through Claude Code on this computer, signed in to your Claude account. No key needed.' + esc(deaf)
+      : 'Claude Code is not set up on this computer yet. Install it, run <code>claude</code> once in a terminal to sign in, ' +
+        'then press \u21bb next to Model.' + install;
+    $('keyNote').className = keyState[p] ? 'note' : 'note warn';
+  } else {
+    const link = preset.keyUrl
+      ? ' <a href="' + esc(preset.keyUrl) + '" target="_blank" rel="noreferrer">Get a key</a>'
+      : '';
+    const status = keyStatuses[p] || (keyState[p] ? 'ok' : 'none');
+    const said = status === 'ok'
+      ? 'A key is saved for this provider.'
+      : status === 'unreadable'
+        ? 'A saved key exists but can no longer be decrypted \u2014 the app was renamed. Paste it again.'
+        : 'No key saved yet.';
+    $('keyNote').innerHTML = said + esc(deaf) + link;
+    $('keyNote').className = status === 'unreadable' ? 'note warn' : 'note';
+  }
 
   $('apiKey').value = '';
   $('apiKey').placeholder = keyState[p] ? 'Replace saved key' : 'Paste your key';
@@ -266,9 +283,10 @@ function paintModels(list) {
  */
 async function refreshModels() {
   const note = $('modelNote');
-  const label = (presets[settings.provider] || {}).label || settings.provider;
+  const preset = presets[settings.provider] || {};
+  const label = preset.label || settings.provider;
 
-  if (!keyState[settings.provider]) {
+  if (!keyState[settings.provider] && !preset.noKey) {
     note.className = 'note';
     note.textContent = 'Add a ' + label + ' key above to load its models.';
     return;
@@ -278,6 +296,12 @@ async function refreshModels() {
   note.textContent = 'Loading models\u2026';
 
   const res = await window.souffleur.listModels();
+  // For Claude Code, loading the list is the check that it is installed and
+  // signed in, so its result is also what the key row reports.
+  if (preset.noKey && Boolean(res.ok) !== Boolean(keyState[settings.provider])) {
+    keyState[settings.provider] = Boolean(res.ok);
+    paintProvider();
+  }
   if (!res.ok) {
     note.className = 'note warn';
     note.textContent = res.error;
@@ -293,8 +317,15 @@ async function refreshModels() {
       res.models.length + ' models available. Switched to ' + settings.model + '.';
   } else {
     paintModels(res.models);
-    note.textContent = res.models.length + ' models available to your key.';
+    note.textContent = preset.noKey
+      ? 'Claude Code is ready.'
+      : res.models.length + ' models available to your key.';
   }
+}
+
+/** A key is saved, or the provider needs none (Claude Code checks itself). */
+function canList() {
+  return Boolean(keyState[settings.provider] || (presets[settings.provider] || {}).noKey);
 }
 
 function wireSettings() {
@@ -308,7 +339,7 @@ function wireSettings() {
 
   $('btnSettings').onclick = () => {
     $('settings').hidden = false;
-    if (keyState[settings.provider] && !modelCache[settings.provider]) refreshModels();
+    if (canList() && !modelCache[settings.provider]) refreshModels();
   };
   const closeSettings = () => {
     $('settings').hidden = true;
@@ -329,7 +360,7 @@ function wireSettings() {
       const preset = presets[b.dataset.p] || {};
       await patch({ provider: b.dataset.p, model: preset.defaultModel || '' });
       paintProvider();
-      if (keyState[settings.provider]) refreshModels();
+      if (canList()) refreshModels();
     };
   }
 
@@ -815,10 +846,13 @@ window.souffleur.onClear(clearChat);
 
   // No key anywhere yet: open settings rather than failing on the first send.
   // With the free key on there is nothing to add, so go straight to the chat.
-  if (!Object.values(keyState).some(Boolean) && !freeOn) {
+  // Claude Code being installed counts only once it is the chosen provider.
+  const ready = Object.entries(keyState)
+    .some(([p, on]) => on && (p !== 'claude-code' || settings.provider === p));
+  if (!ready && !freeOn) {
     $('settings').hidden = false;
   } else {
     inputEl.focus();
-    if (keyState[settings.provider]) refreshModels();  // fill the dropdown up front
+    if (canList()) refreshModels();  // fill the dropdown up front
   }
 })();

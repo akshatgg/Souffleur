@@ -20,6 +20,7 @@ const NODE_GLOBALS = {
   setImmediate: 'readonly', fetch: 'readonly', URL: 'readonly',
   TextDecoder: 'readonly', TextEncoder: 'readonly',
   AbortController: 'readonly', AbortSignal: 'readonly', FormData: 'readonly', Blob: 'readonly',
+  Response: 'readonly', Headers: 'readonly',
 };
 
 const BROWSER_GLOBALS = {
