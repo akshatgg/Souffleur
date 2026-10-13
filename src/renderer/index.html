@@ -65,6 +65,8 @@
           <div class="seg" id="segProvider">
             <button data-p="gemini" aria-pressed="false">Gemini</button>
             <button data-p="openai" aria-pressed="false">OpenAI</button>
+            <button data-p="anthropic" aria-pressed="false">Claude</button>
+            <button data-p="claude-code" aria-pressed="false">Claude Code</button>
             <button data-p="custom" aria-pressed="false">Other</button>
           </div>
         </div>
@@ -76,7 +78,7 @@
         </div>
 
         <div class="row" id="rowKey">
-          <label for="apiKey">API key</label>
+          <label for="apiKey" id="keyLabel">API key</label>
           <input type="password" id="apiKey" placeholder="Paste your key" spellcheck="false" autocomplete="off">
           <div class="note" id="keyNote"></div>
         </div>

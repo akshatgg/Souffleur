@@ -144,14 +144,17 @@ function keyStatus(provider) {
   }
 }
 
+// Providers that take a key. Claude Code signs in through its own CLI.
+const KEYED = ['gemini', 'openai', 'anthropic', 'custom'];
+
 function keyPresence() {
   return Object.fromEntries(
-    ['gemini', 'openai', 'custom'].map((p) => [p, keyStatus(p) === 'ok'])
+    KEYED.map((p) => [p, keyStatus(p) === 'ok'])
   );
 }
 
 function keyStatuses() {
-  return Object.fromEntries(['gemini', 'openai', 'custom'].map((p) => [p, keyStatus(p)]));
+  return Object.fromEntries(KEYED.map((p) => [p, keyStatus(p)]));
 }
 
 module.exports = { getSettings, setSettings, setKey, getKey, keyPresence, keyStatuses, keyStorageMode, DEFAULTS };

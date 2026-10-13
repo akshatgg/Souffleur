@@ -12,6 +12,7 @@ const updater = require('./updater');
 const { Listener } = require('./listen');
 const persona = require('./persona');
 const store = require('./store');
+const claudeCode = require('./claudecode');
 const { captureScreen } = require('./capture');
 
 // Trying the free key locally (./dev_start.sh --free-key) runs as a brand-new
@@ -183,6 +184,10 @@ function installId() {
  * On the free key the server picks the model, so none is sent.
  */
 function routeFor(s) {
+  // Claude Code signs in through its own CLI, so being installed is its key.
+  if (s.provider === 'claude-code' && claudeCode.located()) {
+    return { provider: 'claude-code', model: s.model };
+  }
   const apiKey = store.getKey(s.provider);
   const route = freekey.pickRoute({ hasOwnKey: Boolean(apiKey), freeOn });
   if (route === 'own') return { provider: s.provider, apiKey, model: s.model, baseUrl: s.baseUrl };
@@ -196,6 +201,11 @@ function routeFor(s) {
  */
 function noteFreeStop(err) {
   if (err?.code === 'free_off') setFreeOn(false);
+}
+
+/** Saved keys, plus whether Claude Code is installed, which stands in for its key. */
+function keyPresence() {
+  return { ...store.keyPresence(), 'claude-code': Boolean(claudeCode.located()) };
 }
 
 /* --------------------------------- updates --------------------------------- */
@@ -283,6 +293,29 @@ function transcribeModelFor(s) {
   return s.transcribeModel || defaultTranscribeModel(s.provider, lastModelList[s.provider]);
 }
 
+const HEARS = new Set(['gemini', 'openai', 'custom']);
+
+/**
+ * Who transcribes the call. Usually whoever answers -- but Claude cannot take
+ * audio, so with Claude answering, the call is heard through a Gemini or OpenAI
+ * key the user also saved, or the free key.
+ */
+function transcribeRouteFor(s) {
+  const route = routeFor(s);
+  if (route?.free) return route;
+  if (route && HEARS.has(route.provider)) return { ...route, model: transcribeModelFor(s) };
+
+  for (const provider of ['gemini', 'openai']) {
+    const apiKey = store.getKey(provider);
+    if (apiKey) {
+      return { provider, apiKey, model: defaultTranscribeModel(provider, lastModelList[provider]) };
+    }
+  }
+  if (freeOn) return { provider: 'gemini', free: { installId: installId() } };
+  if (route) throw new Error('Claude cannot hear audio. Add a Gemini or OpenAI key in settings to listen to the call.');
+  return null;
+}
+
 // Once the free key says no (limit reached, or switched off), every clip still
 // queued would fail the same way and each would print the same error. The first
 // one says it; the rest are dropped until listening is started again.
@@ -293,11 +326,10 @@ function ensureListener() {
 
   listener = new Listener(async (wav) => {
     if (freeListenStopped) return '';
-    const s = store.getSettings();
-    const route = routeFor(s);
+    const route = transcribeRouteFor(store.getSettings());
     if (!route) throw new Error('no API key');
     try {
-      return await transcribe({ ...route, model: route.free ? undefined : transcribeModelFor(s), wav });
+      return await transcribe({ ...route, wav });
     } catch (err) {
       if (route.free && freekey.isFreeStop(err)) {
         freeListenStopped = true;
@@ -358,13 +390,14 @@ ipcMain.handle('bootstrap', async () => {
   // key is on. Wait for the launch-time read of the switch, so a first launch
   // does not ask for a key it does not need.
   if (!Object.values(store.keyPresence()).some(Boolean)) await switchRead;
+  await claudeCode.locate();
 
   return {
     settings: store.getSettings(),
     freeKey: freeOn,
     update,
     presets: PRESETS,
-    keys: store.keyPresence(),
+    keys: keyPresence(),
     keyStatuses: store.keyStatuses(),
     docs: persona.list(),
     maxDocs: persona.MAX_DOCS,
@@ -402,7 +435,7 @@ ipcMain.handle('hotkey:check', () => {
 });
 ipcMain.handle('key:set', (_e, { provider, key }) => {
   store.setKey(provider, key);
-  return store.keyPresence();
+  return keyPresence();
 });
 
 ipcMain.handle('models:list', async () => {
@@ -549,7 +582,14 @@ ipcMain.handle('chat:send', async (event, { messages, withScreenshot }) => {
     await refreshSwitch();
     route = routeFor(s);
   }
+  if (!route && s.provider === 'claude-code') {
+    await claudeCode.locate({ fresh: true });
+    route = routeFor(s);
+  }
   if (!route) {
+    if (s.provider === 'claude-code') {
+      return { ok: false, error: 'Claude Code was not found on this computer. Install it from claude.com/claude-code, then try again.' };
+    }
     return { ok: false, error: `No API key set for ${PRESETS[s.provider]?.label || s.provider}.` };
   }
 
@@ -622,6 +662,7 @@ if (!app.requestSingleInstanceLock()) {
     // page asks for it.
     freeOn = store.getSettings().freeKeyOn;
     refreshSwitch();
+    claudeCode.locate();
     createWindow();
     registerShortcuts();
 
