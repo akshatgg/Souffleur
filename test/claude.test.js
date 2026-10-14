@@ -42,6 +42,10 @@ process.stdin.on('end', () => {
 `, { mode: 0o755 });
 process.env.PATH = fakeDir + path.delimiter + process.env.PATH;
 
+// The stand-in runs through its #! line, which Windows does not honour, and on
+// Windows the app looks for claude.exe. So the CLI tests run on macOS and Linux.
+const cliOnly = { skip: process.platform === 'win32' };
+
 const { streamChat } = require('../src/main/providers.js');
 
 async function collect(opts) {
@@ -59,7 +63,7 @@ async function viaCli(mode, opts) {
   }
 }
 
-test('Claude Code: the question, history and system prompt reach the CLI, tools off', async () => {
+test('Claude Code: the question, history and system prompt reach the CLI, tools off', cliOnly, async () => {
   const got = JSON.parse(await viaCli('echo', {
     model: 'haiku',
     system: 'Be terse.',
@@ -78,7 +82,7 @@ test('Claude Code: the question, history and system prompt reach the CLI, tools 
   assert.match(text, /Now reply to this:\s+Why pick it\?$/);
 });
 
-test('Claude Code: a screenshot goes in as an image block before the question', async () => {
+test('Claude Code: a screenshot goes in as an image block before the question', cliOnly, async () => {
   const got = JSON.parse(await viaCli('echo', {
     model: 'opus',
     image: 'data:image/png;base64,AAAA',
@@ -90,14 +94,14 @@ test('Claude Code: a screenshot goes in as an image block before the question', 
   assert.deepStrictEqual(got.content[1], { type: 'text', text: 'What is this?' });
 });
 
-test('Claude Code: a signed-out CLI says how to sign in', async () => {
+test('Claude Code: a signed-out CLI says how to sign in', cliOnly, async () => {
   await assert.rejects(
     viaCli('signed-out', { model: 'opus', messages: [{ role: 'user', content: 'hi' }] }),
     /Not logged in.*sign in/,
   );
 });
 
-test('Claude Code: stopping an answer ends the process', async () => {
+test('Claude Code: stopping an answer ends the process', cliOnly, async () => {
   const ctrl = new AbortController();
   process.env.FAKE_CLAUDE = 'hang';
   const started = Date.now();
