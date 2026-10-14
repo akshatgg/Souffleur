@@ -31,6 +31,9 @@ const run = promisify(execFile);
 // this public one, which holds nothing else.
 const REPO = 'akshatgg/souffleur-releases';
 const LATEST_URL = `https://api.github.com/repos/${REPO}/releases/latest`;
+// The newest release's own files. A plain download, not an API call, so the
+// API's limit of 60 calls an hour does not apply to it.
+const LATEST_FILES = `https://github.com/${REPO}/releases/latest/download/`;
 const RELEASES_PAGE = `https://github.com/${REPO}/releases/latest`;
 // Installers are only ever taken from that repository's releases.
 const DOWNLOADS = `https://github.com/${REPO}/releases/download/`;
@@ -73,12 +76,100 @@ function pickAsset(assets, platform, arch) {
     url: found.browser_download_url,
     size: found.size || 0,
     sha256: /^sha256:[0-9a-f]{64}$/i.test(found.digest || '') ? found.digest.slice(7).toLowerCase() : '',
+    sha512: /^[A-Za-z0-9+/]{86}==$/.test(found.sha512 || '') ? found.sha512 : '',
   };
 }
 
-/** Ask GitHub for the newest release. Throws with a message fit to show. */
+/**
+ * The update manifest each release carries, the same format electron-builder
+ * writes: the version, then each installer's name, sha512 and size. Only the
+ * shape packaging/latest-yml.js writes is read; it is not a YAML parser.
+ */
+function parseLatestYml(text) {
+  const unquote = (v) => v.trim().replace(/^(['"])(.*)\1$/, '$2');
+  const out = { files: [] };
+  let inFiles = false;
+  let file = null;
+  for (const raw of String(text).split(/\r?\n/)) {
+    if (!raw.trim() || raw.trim().startsWith('#')) continue;
+    const item = /^\s*-\s+(\w+):\s*(.*)$/.exec(raw);
+    const nested = /^\s+(\w+):\s*(.*)$/.exec(raw);
+    const top = /^(\w+):\s*(.*)$/.exec(raw);
+    if (top) {
+      inFiles = top[1] === 'files' && top[2].trim() === '';
+      if (!inFiles) out[top[1]] = unquote(top[2]);
+    } else if (inFiles && item) {
+      file = { [item[1]]: unquote(item[2]) };
+      out.files.push(file);
+    } else if (inFiles && nested && file) {
+      file[nested[1]] = unquote(nested[2]);
+    }
+  }
+  for (const f of out.files) if (f.size !== undefined) f.size = Number(f.size);
+  return out;
+}
+
+function formatLatestYml({ version, files, releaseDate }) {
+  return [
+    `version: ${version}`,
+    'files:',
+    ...files.flatMap((f) => [`  - url: ${f.file}`, `    sha512: ${f.sha512}`, `    size: ${f.size}`]),
+    `path: ${files[0].file}`,
+    `sha512: ${files[0].sha512}`,
+    `releaseDate: '${releaseDate}'`,
+    '',
+  ].join('\n');
+}
+
+async function sha512OfFile(file) {
+  const hash = crypto.createHash('sha512');
+  for await (const chunk of fs.createReadStream(file)) hash.update(chunk);
+  return hash.digest('base64');
+}
+
+const manifestFor = (platform) => (platform === 'win32' ? 'latest.yml' : 'latest-mac.yml');
+
+/**
+ * Ask GitHub for the newest release. Throws with a message fit to show.
+ *
+ * Reads the newest release's manifest, a plain download that GitHub does not
+ * count against its API limit, so a busy shared network cannot block it.
+ * Releases from before the manifest existed are asked about through the API.
+ */
 async function check({ current, platform = process.platform, arch = process.arch,
                        fetchImpl = fetch, timeoutMs = 8000 } = {}) {
+  let res;
+  try {
+    res = await fetchImpl(LATEST_FILES + manifestFor(platform), { signal: AbortSignal.timeout(timeoutMs) });
+  } catch {
+    throw new Error('Could not reach GitHub to check for updates.');
+  }
+  if (res.status === 404) return checkApi({ current, platform, arch, fetchImpl, timeoutMs });
+  if (!res.ok) throw new Error(`Could not check for updates (GitHub answered ${res.status}).`);
+
+  let manifest;
+  try {
+    manifest = parseLatestYml(await res.text());
+  } catch {
+    throw new Error('Could not check for updates: the download was cut off.');
+  }
+  const version = String(manifest.version || '').replace(/^v/i, '');
+  if (!version) throw new Error('Could not check for updates: GitHub sent something unexpected.');
+
+  const tag = `${DOWNLOADS}v${encodeURIComponent(version)}/`;
+  const assets = manifest.files.filter((f) => f.url).map((f) => ({
+    name: f.url, browser_download_url: tag + encodeURIComponent(f.url), size: f.size, sha512: f.sha512,
+  }));
+  return {
+    version,
+    newer: isNewer(version, current),
+    asset: pickAsset(assets, platform, arch),
+    page: `https://github.com/${REPO}/releases/tag/v${encodeURIComponent(version)}`,
+  };
+}
+
+/** The same question through the API, for a release that has no manifest. */
+async function checkApi({ current, platform, arch, fetchImpl, timeoutMs }) {
   let res;
   try {
     res = await fetchImpl(LATEST_URL, {
@@ -131,8 +222,9 @@ function rateLimited(reset) {
 }
 
 /**
- * Download the installer into `dir`, checking it against the size and SHA-256
- * GitHub lists for it. Resolves to the file's path.
+ * Download the installer into `dir`, checking it against the size and the
+ * checksum the release lists for it: the manifest's sha512, or the SHA-256
+ * GitHub's API lists. Resolves to the file's path.
  */
 async function download(asset, dir, { onProgress, fetchImpl = fetch } = {}) {
   if (!asset.url.startsWith(DOWNLOADS)) throw new Error('The update points somewhere unexpected.');
@@ -149,7 +241,7 @@ async function download(asset, dir, { onProgress, fetchImpl = fetch } = {}) {
   if (!res.ok || !res.body) throw new Error(`The download failed (${res.status}).`);
 
   const total = asset.size || Number(res.headers.get('content-length')) || 0;
-  const hash = crypto.createHash('sha256');
+  const hash = crypto.createHash(asset.sha512 ? 'sha512' : 'sha256');
   const out = fs.createWriteStream(file);
   let got = 0;
   try {
@@ -165,8 +257,9 @@ async function download(asset, dir, { onProgress, fetchImpl = fetch } = {}) {
     await new Promise((done) => out.end(done));
   }
 
+  const digest = hash.digest(asset.sha512 ? 'base64' : 'hex');
   const intact = (!asset.size || got === asset.size)
-    && (!asset.sha256 || hash.digest('hex') === asset.sha256);
+    && (asset.sha512 ? digest === asset.sha512 : !asset.sha256 || digest === asset.sha256);
   if (!intact) {
     await fs.promises.rm(file, { force: true });
     throw new Error('The download did not match the release. Try again.');
@@ -206,8 +299,12 @@ function blocker({ platform = process.platform, execPath = process.execPath, pac
 // Runs after this process is gone: it cannot replace a bundle that is still
 // executing. The old app is moved aside rather than deleted first, so a failed
 // move puts it back and the user is never left with no app at all.
+//
+// An ad-hoc signature changes with every build, so macOS no longer matches the
+// new app to the Screen Recording grant the old one had, yet still shows it as
+// on. Resetting it makes macOS ask again instead of failing silently.
 const SWAP = `
-pid="$1"; target="$2"; staged="$3"; old="$4"
+pid="$1"; target="$2"; staged="$3"; old="$4"; relaunch="$5"; id="$6"
 n=0
 while kill -0 "$pid" 2>/dev/null; do
   n=$((n + 1))
@@ -215,17 +312,22 @@ while kill -0 "$pid" 2>/dev/null; do
   sleep 0.2
 done
 rm -rf "$old"
+swapped=0
 if mv "$target" "$old"; then
-  if mv "$staged" "$target"; then rm -rf "$old"; else mv "$old" "$target"; fi
+  if mv "$staged" "$target"; then rm -rf "$old"; swapped=1; else mv "$old" "$target"; fi
 fi
-open "$target"
+if [ "$swapped" = 1 ] && /usr/bin/codesign -dv "$target" 2>&1 | grep -q "Signature=adhoc"; then
+  /usr/bin/tccutil reset All "$id" >/dev/null 2>&1
+fi
+[ "$relaunch" = 1 ] && /usr/bin/open "$target"
+exit 0
 `;
 
 /**
- * macOS: put the new app beside the installed one and leave a helper waiting to
- * swap them. Resolves once the helper is waiting; the caller then quits.
+ * macOS, step one, done as soon as the download is verified: put the new app
+ * beside the installed one and check it. Resolves to what swapMac needs.
  */
-async function installMac({ dmg, execPath = process.execPath, pid = process.pid }) {
+async function stageMac({ dmg, execPath = process.execPath }) {
   const target = macBundle(execPath);
   if (!target) throw new Error('Could not find the installed app to replace.');
 
@@ -263,21 +365,32 @@ async function installMac({ dmg, execPath = process.execPath, pid = process.pid 
   // What the Homebrew cask does after installing; without it a copy that picked
   // up the quarantine flag would be refused on its first launch.
   await run('/usr/bin/xattr', ['-dr', 'com.apple.quarantine', staged]).catch(() => {});
+  return { target, staged, old };
+}
 
-  spawn('/bin/sh', ['-c', SWAP, 'sh', String(pid), target, staged, old],
-    { detached: true, stdio: 'ignore' }).unref();
+/**
+ * macOS, step two, as Souffleur quits: leave a helper waiting to swap the
+ * staged app in once this process has exited, and to open it again when
+ * `relaunch` is set. Returns the helper's process.
+ */
+function swapMac({ target, staged, old, relaunch, pid = process.pid, bundleId = BUNDLE_ID }) {
+  const child = spawn('/bin/sh', ['-c', SWAP, 'sh', String(pid), target, staged, old, relaunch ? '1' : '0', bundleId],
+    { detached: true, stdio: 'ignore' });
+  child.unref();
+  return child;
 }
 
 /**
  * Windows: hand over to the installer. These are the switches electron-builder's
  * NSIS installer takes for an update: no wizard, close the running app, install
- * where it already is, and open it again.
+ * where it already is, and, with `relaunch`, open it again.
  */
-function installWin({ exe }) {
-  spawn(exe, ['--updated', '/S', '--force-run'], { detached: true, stdio: 'ignore' }).unref();
+function installWin({ exe, relaunch }) {
+  const args = relaunch ? ['--updated', '/S', '--force-run'] : ['--updated', '/S'];
+  spawn(exe, args, { detached: true, stdio: 'ignore' }).unref();
 }
 
 module.exports = {
-  isNewer, pickAsset, check, download, blocker, macBundle, installMac, installWin,
-  RELEASES_PAGE,
+  isNewer, pickAsset, check, download, blocker, macBundle, stageMac, swapMac, installWin,
+  parseLatestYml, formatLatestYml, sha512OfFile, RELEASES_PAGE,
 };
