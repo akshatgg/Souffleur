@@ -1,6 +1,6 @@
 {
   "name": "souffleur",
-  "version": "0.1.7",
+  "version": "1.0.0",
   "description": "A hidden prompter for calls: sees your screen, hears the room, invisible to screen share",
   "main": "src/main/main.js",
   "scripts": {
