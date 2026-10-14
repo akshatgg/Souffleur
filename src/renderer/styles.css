@@ -125,6 +125,34 @@ body {
 .update-text { flex: 1; font-size: var(--fs-meta); color: var(--ink-dim); }
 .update-text.warn { color: var(--alarm); }
 .update .primary { flex: none; padding: 4px 12px; font-size: var(--fs-meta); }
+
+/* ---- update popup: once per newly found release, above everything ---- */
+
+.update-pop {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius);
+}
+.update-pop[hidden] { display: none; }
+.update-card {
+  width: 100%;
+  max-width: 300px;
+  padding: 14px 16px;
+  background: var(--slab);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+}
+.update-title { font-weight: 600; }
+.update-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.update-actions .add-doc { width: auto; padding: 6px 14px; border-style: solid; }
 .primary[disabled] { opacity: 0.45; cursor: default; }
 
 /* ---- transcript ---- */

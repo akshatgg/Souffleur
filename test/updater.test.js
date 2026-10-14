@@ -61,11 +61,41 @@ test('check reports the newest release and whether it is newer', async () => {
   const same = await check({ current: '0.2.0', platform: 'win32', fetchImpl: serve(200, rel) });
   assert.equal(same.newer, false);
 
-  await assert.rejects(check({ current: '0.1.4', fetchImpl: serve(403, {}) }), /403/);
+  await assert.rejects(check({ current: '0.1.4', fetchImpl: serve(500, {}) }), /500/);
   await assert.rejects(
     check({ current: '0.1.4', fetchImpl: async () => { throw new Error('offline'); } }),
     /Could not reach GitHub/
   );
+});
+
+test('when GitHub limits the API, the release page still gives the version', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init = {}) => {
+    calls.push({ url, method: init.method || 'GET' });
+    if (url.startsWith('https://api.github.com/')) {
+      return { ok: false, status: 403, headers: { get: () => '1791965632' } };
+    }
+    return { ok: true, status: 200, url: 'https://github.com/akshatgg/souffleur-releases/releases/tag/v0.2.0' };
+  };
+
+  const up = await check({ current: '0.1.4', platform: 'darwin', arch: 'arm64', fetchImpl });
+  assert.equal(up.version, '0.2.0');
+  assert.equal(up.newer, true);
+  assert.equal(up.limited, true);
+  assert.equal(up.asset, null, 'no checksum, so nothing to download');
+  assert.equal(up.page, 'https://github.com/akshatgg/souffleur-releases/releases/tag/v0.2.0');
+  assert.deepEqual(calls.map((c) => c.method), ['GET', 'HEAD']);
+});
+
+test('when GitHub limits both ways, the message says so instead of a bare 403', async () => {
+  const limited = async () => ({ ok: false, status: 429, headers: { get: () => null } });
+  await assert.rejects(check({ current: '0.1.4', fetchImpl: limited }),
+    /GitHub is limiting update checks from your network right now\. Try again in an hour\./);
+
+  const pageDown = async (url) => (url.startsWith('https://api.github.com/')
+    ? { ok: false, status: 403, headers: { get: () => '1791965632' } }
+    : Promise.reject(new Error('offline')));
+  await assert.rejects(check({ current: '0.1.4', fetchImpl: pageDown }), /Try again after /);
 });
 
 /** A fetch that serves `bytes` as a one-chunk body. */

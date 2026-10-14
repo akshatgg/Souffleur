@@ -88,6 +88,9 @@ async function check({ current, platform = process.platform, arch = process.arch
   } catch {
     throw new Error('Could not reach GitHub to check for updates.');
   }
+  if (res.status === 403 || res.status === 429) {
+    return fromReleasesPage({ current, fetchImpl, timeoutMs, reset: res.headers?.get?.('x-ratelimit-reset') });
+  }
   if (!res.ok) throw new Error(`Could not check for updates (GitHub answered ${res.status}).`);
 
   const rel = await res.json();
@@ -98,6 +101,33 @@ async function check({ current, platform = process.platform, arch = process.arch
     asset: pickAsset(rel.assets, platform, arch),
     page: rel.html_url || RELEASES_PAGE,
   };
+}
+
+/**
+ * GitHub allows 60 API calls an hour from one address, shared by everyone
+ * behind it, so an office or a carrier's network can use them all up. The
+ * release page is not counted against that: it redirects to the newest tag,
+ * which gives the version. It lists no checksum, so `limited` marks a release
+ * found this way, and nothing is downloaded on its word alone.
+ */
+async function fromReleasesPage({ current, fetchImpl, timeoutMs, reset }) {
+  try {
+    const res = await fetchImpl(RELEASES_PAGE, { method: 'HEAD', signal: AbortSignal.timeout(timeoutMs) });
+    const tag = /\/releases\/tag\/v?([^/?#]+)$/.exec(res.ok ? res.url : '');
+    if (tag) {
+      const version = decodeURIComponent(tag[1]);
+      return { version, newer: isNewer(version, current), asset: null, page: res.url, limited: true };
+    }
+  } catch { /* fall through to the rate-limit message */ }
+  throw new Error(rateLimited(reset));
+}
+
+function rateLimited(reset) {
+  const at = new Date(Number(reset) * 1000);
+  const when = Number(reset) > 0
+    ? ` after ${at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    : ' in an hour';
+  return `GitHub is limiting update checks from your network right now. Try again${when}.`;
 }
 
 /**

@@ -403,6 +403,7 @@ function wireSettings() {
 /* --------------------------------- updates --------------------------------- */
 
 let update = null;       // as the main process last reported it
+let poppedFor = '';      // the version the popup was last shown for
 
 /**
  * The same state painted twice: a strip above the chat that appears only when
@@ -436,11 +437,39 @@ function paintUpdate(u) {
     : u.state === 'current' ? 'You have the latest version.'
     : u.state === 'available' ? 'Downloads the new version, installs it and reopens Souffleur.'
     : '';
+
+  maybePopUpdate();
+}
+
+/**
+ * Ask once for each release found, so the strip above the chat is not the only
+ * sign of it. Held back while listening: a card over the chat in the middle of
+ * a call is the wrong moment. It shows when listening stops instead.
+ */
+function maybePopUpdate() {
+  const pop = $('updatePop');
+  if (!update || update.state !== 'available' || update.message) {
+    pop.hidden = true;
+    return;
+  }
+  if (listening || poppedFor === update.version) return;
+
+  poppedFor = update.version;
+  $('updatePopTitle').textContent = `Souffleur ${update.version} is available`;
+  $('updatePopNote').textContent =
+    `You have ${update.current}. Update now downloads it, installs it and reopens Souffleur.`;
+  pop.hidden = false;
+  $('btnUpdatePop').focus();
 }
 
 function wireUpdate() {
   window.souffleur.onUpdate(paintUpdate);
   $('btnUpdate').onclick = () => window.souffleur.installUpdate();
+  $('btnUpdatePop').onclick = () => {
+    $('updatePop').hidden = true;
+    window.souffleur.installUpdate();
+  };
+  $('btnUpdateLater').onclick = () => { $('updatePop').hidden = true; };
   $('btnVersion').onclick = () => (update && update.state === 'available'
     ? window.souffleur.installUpdate()
     : window.souffleur.checkUpdate());
@@ -714,6 +743,7 @@ function paintListening(on) {
   $('statusText').textContent = listening
     ? 'Listening to the call \u2014 hidden from screen share'
     : baseStatusText;
+  maybePopUpdate();
 }
 
 /** Answer the most recent thing that was said, without typing it out. */
@@ -769,7 +799,9 @@ function wireInput() {
 
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!$('settings').hidden) {
+    if (!$('updatePop').hidden) {
+      $('updatePop').hidden = true;     // same as Later
+    } else if (!$('settings').hidden) {
       $('settings').hidden = true;
       inputEl.focus();
     } else if (busy) {
@@ -835,7 +867,6 @@ window.souffleur.onClear(clearChat);
   wirePersona();
   wireInput();
   wireUpdate();
-  paintUpdate(b.update);
   autoGrow();
 
   paintHotkey();
@@ -843,6 +874,8 @@ window.souffleur.onClear(clearChat);
   const ls = await window.souffleur.listenState();
   for (const line of ls.lines || []) addHeard(line);   // {who, text}
   paintListening(ls.running);
+  // After listening is known, so a reload mid-call does not pop the update card.
+  paintUpdate(b.update);
 
   // No key anywhere yet: open settings rather than failing on the first send.
   // With the free key on there is nothing to add, so go straight to the chat.

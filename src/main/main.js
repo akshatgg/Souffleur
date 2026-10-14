@@ -259,8 +259,13 @@ function updateByHand(why) {
 
 async function installUpdate() {
   if (updateBusy()) return update;
-  if (!latest) await checkForUpdate();
+  // Found through the release page while GitHub was limiting this network:
+  // ask again for the checksum, which may be allowed by now.
+  if (!latest || latest.limited) await checkForUpdate();
   if (!latest) return update;
+  if (latest.limited) {
+    return updateByHand('GitHub is limiting downloads from your network right now, so Souffleur cannot verify the download itself.');
+  }
 
   const why = updater.blocker({ packaged: app.isPackaged });
   if (why) return updateByHand(why);
