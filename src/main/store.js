@@ -144,7 +144,7 @@ function keyStatus(provider) {
   }
 }
 
-// Providers that take a key. Claude Code signs in through its own CLI.
+// Providers that take a key. Claude Code and Copilot sign in through their own CLIs.
 const KEYED = ['gemini', 'openai', 'anthropic', 'custom'];
 
 function keyPresence() {
