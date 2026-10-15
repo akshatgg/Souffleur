@@ -5,7 +5,11 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { isNewer, pickAsset, check, download, blocker, macBundle } = require('../src/main/updater.js');
+const {
+  isNewer, pickAsset, check, download, blocker, macBundle, swapMac,
+  parseLatestYml, formatLatestYml,
+} = require('../src/main/updater.js');
+const { writeLatestYml } = require('../packaging/latest-yml.js');
 
 /**
  * Update now: which release counts as newer, which installer this machine
@@ -49,19 +53,67 @@ test('the checksum GitHub lists is kept, and anything else is ignored', () => {
   assert.equal(pickAsset([asset('S.exe')], 'win32', 'x64').sha256, '');
 });
 
-test('check reports the newest release and whether it is newer', async () => {
-  const serve = (status, body) => async () => ({ ok: status === 200, status, json: async () => body });
-  const rel = { tag_name: 'v0.2.0', html_url: 'https://example.test/r', assets: ASSETS };
+const SHA512 = (c) => c.repeat(86) + '==';
+const MANIFEST_MAC = formatLatestYml({
+  version: '0.2.0',
+  files: [
+    { file: 'Souffleur-0.2.0-arm64.dmg', sha512: SHA512('a'), size: 11 },
+    { file: 'Souffleur-0.2.0.dmg', sha512: SHA512('b'), size: 12 },
+  ],
+  releaseDate: '2026-10-14T00:00:00.000Z',
+});
+const MANIFEST_WIN = formatLatestYml({
+  version: '0.2.0',
+  files: [{ file: 'Souffleur.Setup.0.2.0.exe', sha512: SHA512('c'), size: 13 }],
+  releaseDate: '2026-10-14T00:00:00.000Z',
+});
+const LATEST = 'https://github.com/akshatgg/souffleur-releases/releases/latest/download/';
 
-  const up = await check({ current: '0.1.4', platform: 'darwin', arch: 'arm64', fetchImpl: serve(200, rel) });
+/** A fetch that answers by URL: `routes` maps a URL prefix to a response. */
+function routed(routes, calls = []) {
+  return async (url, init = {}) => {
+    calls.push({ url, method: init.method || 'GET' });
+    const hit = Object.keys(routes).find((prefix) => url.startsWith(prefix));
+    if (!hit) return { ok: false, status: 404, headers: { get: () => null } };
+    const r = routes[hit];
+    return typeof r === 'function' ? r(url) : r;
+  };
+}
+const text = (body) => ({ ok: true, status: 200, text: async () => body });
+
+test('check reads the newest release from its manifest, not the API', async () => {
+  const calls = [];
+  const fetchImpl = routed({ [LATEST + 'latest-mac.yml']: text(MANIFEST_MAC), [LATEST + 'latest.yml']: text(MANIFEST_WIN) }, calls);
+
+  const up = await check({ current: '0.1.4', platform: 'darwin', arch: 'arm64', fetchImpl });
   assert.equal(up.version, '0.2.0');
   assert.equal(up.newer, true);
+  assert.deepEqual(up.asset, {
+    name: 'Souffleur-0.2.0-arm64.dmg', url: BASE + 'Souffleur-0.2.0-arm64.dmg', size: 11, sha256: '', sha512: SHA512('a'),
+  });
+  assert.equal(up.page, 'https://github.com/akshatgg/souffleur-releases/releases/tag/v0.2.0');
+  assert.ok(calls.every((c) => !c.url.startsWith('https://api.github.com/')), 'never touches the API');
+
+  const intel = await check({ current: '0.1.4', platform: 'darwin', arch: 'x64', fetchImpl });
+  assert.equal(intel.asset.name, 'Souffleur-0.2.0.dmg');
+
+  const win = await check({ current: '0.2.0', platform: 'win32', arch: 'x64', fetchImpl });
+  assert.equal(win.newer, false);
+  assert.equal(win.asset.url, BASE + 'Souffleur.Setup.0.2.0.exe');
+  assert.equal(win.asset.sha512, SHA512('c'));
+});
+
+test('a release without a manifest is asked about through the API', async () => {
+  const rel = { tag_name: 'v0.2.0', html_url: 'https://example.test/r', assets: ASSETS };
+  const fetchImpl = routed({ 'https://api.github.com/': { ok: true, status: 200, json: async () => rel } });
+
+  const up = await check({ current: '0.1.4', platform: 'darwin', arch: 'arm64', fetchImpl });
+  assert.equal(up.version, '0.2.0');
   assert.equal(up.asset.name, 'Souffleur-0.2.0-arm64.dmg');
+  assert.equal(up.page, 'https://example.test/r');
 
-  const same = await check({ current: '0.2.0', platform: 'win32', fetchImpl: serve(200, rel) });
-  assert.equal(same.newer, false);
-
-  await assert.rejects(check({ current: '0.1.4', fetchImpl: serve(500, {}) }), /500/);
+  const broken = routed({ [LATEST]: { ok: false, status: 500 } });
+  await assert.rejects(check({ current: '0.1.4', fetchImpl: broken }), /500/);
   await assert.rejects(
     check({ current: '0.1.4', fetchImpl: async () => { throw new Error('offline'); } }),
     /Could not reach GitHub/
@@ -70,13 +122,12 @@ test('check reports the newest release and whether it is newer', async () => {
 
 test('when GitHub limits the API, the release page still gives the version', async () => {
   const calls = [];
-  const fetchImpl = async (url, init = {}) => {
-    calls.push({ url, method: init.method || 'GET' });
-    if (url.startsWith('https://api.github.com/')) {
-      return { ok: false, status: 403, headers: { get: () => '1791965632' } };
-    }
-    return { ok: true, status: 200, url: 'https://github.com/akshatgg/souffleur-releases/releases/tag/v0.2.0' };
-  };
+  const fetchImpl = routed({
+    'https://api.github.com/': { ok: false, status: 403, headers: { get: () => '1791965632' } },
+    'https://github.com/akshatgg/souffleur-releases/releases/latest': (url) => (url.includes('/download/')
+      ? { ok: false, status: 404 }
+      : { ok: true, status: 200, url: 'https://github.com/akshatgg/souffleur-releases/releases/tag/v0.2.0' }),
+  }, calls);
 
   const up = await check({ current: '0.1.4', platform: 'darwin', arch: 'arm64', fetchImpl });
   assert.equal(up.version, '0.2.0');
@@ -84,18 +135,54 @@ test('when GitHub limits the API, the release page still gives the version', asy
   assert.equal(up.limited, true);
   assert.equal(up.asset, null, 'no checksum, so nothing to download');
   assert.equal(up.page, 'https://github.com/akshatgg/souffleur-releases/releases/tag/v0.2.0');
-  assert.deepEqual(calls.map((c) => c.method), ['GET', 'HEAD']);
+  assert.deepEqual(calls.map((c) => c.method), ['GET', 'GET', 'HEAD']);
 });
 
 test('when GitHub limits both ways, the message says so instead of a bare 403', async () => {
-  const limited = async () => ({ ok: false, status: 429, headers: { get: () => null } });
+  const limited = routed({ 'https://api.github.com/': { ok: false, status: 429, headers: { get: () => null } } });
   await assert.rejects(check({ current: '0.1.4', fetchImpl: limited }),
     /GitHub is limiting update checks from your network right now\. Try again in an hour\./);
 
-  const pageDown = async (url) => (url.startsWith('https://api.github.com/')
-    ? { ok: false, status: 403, headers: { get: () => '1791965632' } }
-    : Promise.reject(new Error('offline')));
+  const pageDown = routed({
+    'https://api.github.com/': { ok: false, status: 403, headers: { get: () => '1791965632' } },
+    'https://github.com/akshatgg/souffleur-releases/releases/latest': (url) => (url.includes('/download/')
+      ? { ok: false, status: 404 }
+      : Promise.reject(new Error('offline'))),
+  });
   await assert.rejects(check({ current: '0.1.4', fetchImpl: pageDown }), /Try again after /);
+});
+
+test('the release workflow\'s manifest reads back as written', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'souffleur-yml-'));
+  const arm = path.join(dir, 'Souffleur-0.2.0-arm64.dmg');
+  const intel = path.join(dir, 'Souffleur-0.2.0.dmg');
+  fs.writeFileSync(arm, 'arm build');
+  fs.writeFileSync(intel, 'intel build!');
+
+  const out = await writeLatestYml({ version: '0.2.0', installer: [arm, intel], out: path.join(dir, 'latest-mac.yml') });
+  const m = parseLatestYml(fs.readFileSync(out, 'utf8'));
+  assert.equal(m.version, '0.2.0');
+  assert.deepEqual(m.files.map((f) => [f.url, f.size]), [['Souffleur-0.2.0-arm64.dmg', 9], ['Souffleur-0.2.0.dmg', 12]]);
+  assert.equal(m.files[0].sha512, crypto.createHash('sha512').update('arm build').digest('base64'));
+
+  await assert.rejects(writeLatestYml({ version: 'v0.2', installer: [arm] }), /Not a version/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('electron-builder\'s own manifest format reads too', () => {
+  const m = parseLatestYml([
+    'version: 0.3.0',
+    'files:',
+    '  - url: Souffleur Setup 0.3.0.exe',
+    `    sha512: ${SHA512('d')}`,
+    '    size: 99',
+    'path: Souffleur Setup 0.3.0.exe',
+    `sha512: ${SHA512('d')}`,
+    "releaseDate: '2026-10-14T00:00:00.000Z'",
+  ].join('\r\n'));
+  assert.equal(m.version, '0.3.0');
+  assert.deepEqual(m.files, [{ url: 'Souffleur Setup 0.3.0.exe', sha512: SHA512('d'), size: 99 }]);
+  assert.equal(m.releaseDate, '2026-10-14T00:00:00.000Z');
 });
 
 /** A fetch that serves `bytes` as a one-chunk body. */
@@ -123,6 +210,14 @@ test('a download is kept only when it matches the release', async () => {
   // Cut short.
   const short = { ...good, name: 'U.exe', size: bytes.length + 5, sha256: '' };
   await assert.rejects(download(short, dir, { fetchImpl: serveBytes(bytes) }), /did not match/);
+
+  // The manifest's sha512 is checked when there is one, in place of the SHA-256.
+  const sha512 = crypto.createHash('sha512').update(bytes).digest('base64');
+  const listed = { ...good, name: 'V.exe', sha256: '', sha512 };
+  assert.deepEqual(fs.readFileSync(await download(listed, dir, { fetchImpl: serveBytes(bytes) })), bytes);
+  await assert.rejects(download({ ...listed, name: 'W.exe', sha512: SHA512('e') }, dir, { fetchImpl: serveBytes(bytes) }),
+    /did not match/);
+  assert.equal(fs.existsSync(path.join(dir, 'W.exe')), false);
 
   fs.rmSync(dir, { recursive: true, force: true });
 });
@@ -163,4 +258,28 @@ test('on macOS, only a copy installed somewhere writable replaces itself', { ski
   }), /Applications first/);
 
   fs.rmSync(home, { recursive: true, force: true });
+});
+
+test('at quit, the staged app is swapped in, and reopened only when asked', { skip: process.platform === 'win32' }, async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'souffleur-swap-'));
+  const target = path.join(dir, 'Souffleur.app');
+  const staged = path.join(dir, '.Souffleur.update.app');
+  const old = path.join(dir, '.Souffleur.old.app');
+  fs.mkdirSync(target);
+  fs.writeFileSync(path.join(target, 'version'), 'old');
+  fs.mkdirSync(staged);
+  fs.writeFileSync(path.join(staged, 'version'), 'new');
+
+  // A process that has already exited stands in for the quitting app. Not
+  // signed, so the permission reset is skipped; relaunch off, so nothing opens.
+  const gone = require('child_process').spawnSync(process.execPath, ['-e', '']).pid;
+  const child = swapMac({ target, staged, old, relaunch: false, pid: gone, bundleId: 'test.invalid.souffleur' });
+  child.ref();   // detached and unref'd so it outlives the app; here, wait for it
+  const [code] = await require('events').once(child, 'exit');
+
+  assert.equal(code, 0);
+  assert.equal(fs.readFileSync(path.join(target, 'version'), 'utf8'), 'new');
+  assert.equal(fs.existsSync(staged), false);
+  assert.equal(fs.existsSync(old), false);
+  fs.rmSync(dir, { recursive: true, force: true });
 });

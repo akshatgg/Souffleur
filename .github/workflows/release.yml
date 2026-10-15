@@ -116,10 +116,22 @@ jobs:
           ls -lh release/*.dmg
           test -n "$(ls release/*.dmg 2>/dev/null)" || { echo "no DMG produced"; exit 1; }
 
+      # What the app's update check reads from the newest release: the version,
+      # and each DMG's sha512 and size. It is a plain download, not a GitHub API
+      # call, so the API's 60-an-hour limit never blocks a check.
+      - name: Write latest-mac.yml
+        run: |
+          set -euo pipefail
+          installers=()
+          for f in release/*.dmg; do installers+=(--installer "$f"); done
+          node packaging/latest-yml.js --version "${{ needs.prepare.outputs.version }}" "${installers[@]}" --out release/latest-mac.yml
+
       - uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: release/*.dmg
+          path: |
+            release/*.dmg
+            release/latest-mac.yml
 
   windows:
     needs: [prepare]
@@ -148,10 +160,25 @@ jobs:
           ls -lh release/*.exe
           test -n "$(ls release/*.exe 2>/dev/null)" || { echo "no installer produced"; exit 1; }
 
+      # GitHub turns the spaces in "Souffleur Setup 1.0.2.exe" into dots when it
+      # is uploaded. Rename it first, so latest.yml names the file as it will be
+      # found on the release.
+      - name: Write latest.yml
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in release/*.exe; do
+            dotted="release/$(basename "$f" | tr ' ' '.')"
+            [ "$f" = "$dotted" ] || mv "$f" "$dotted"
+          done
+          node packaging/latest-yml.js --version "${{ needs.prepare.outputs.version }}" --installer "$(ls release/*.exe)" --out release/latest.yml
+
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: release/*.exe
+          path: |
+            release/*.exe
+            release/latest.yml
 
   release:
     needs: [prepare, macos, windows]
@@ -173,6 +200,8 @@ jobs:
           find artifacts -type f \( -name '*.dmg' -o -name '*.exe' \) -print
           count=$(find artifacts -type f \( -name '*.dmg' -o -name '*.exe' \) | wc -l)
           test "$count" -ge 3 || { echo "expected 3 installers, found $count"; exit 1; }
+          test -f artifacts/macos/latest-mac.yml || { echo "latest-mac.yml missing"; exit 1; }
+          test -f artifacts/windows/latest.yml || { echo "latest.yml missing"; exit 1; }
 
       # A manual run chose the version, so write it back to the repository and
       # create the tag. Pushes made with GITHUB_TOKEN do not trigger workflows,
@@ -201,6 +230,7 @@ jobs:
           files: |
             artifacts/**/*.dmg
             artifacts/**/*.exe
+            artifacts/**/latest*.yml
           fail_on_unmatched_files: true
           generate_release_notes: true
           body: |
@@ -252,7 +282,7 @@ jobs:
           fi
           v="${{ needs.prepare.outputs.version }}"
           repo="akshatgg/souffleur-releases"
-          mapfile -t files < <(find artifacts -type f \( -name '*.dmg' -o -name '*.exe' \))
+          mapfile -t files < <(find artifacts -type f \( -name '*.dmg' -o -name '*.exe' -o -name 'latest*.yml' \))
           if gh release view "v$v" --repo "$repo" >/dev/null 2>&1; then
             gh release upload "v$v" --repo "$repo" --clobber "${files[@]}"
           else

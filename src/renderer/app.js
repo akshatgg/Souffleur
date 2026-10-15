@@ -406,74 +406,52 @@ function wireSettings() {
 /* --------------------------------- updates --------------------------------- */
 
 let update = null;       // as the main process last reported it
-let poppedFor = '';      // the version the popup was last shown for
 
 /**
  * The same state painted twice: a strip above the chat that appears only when
  * there is something to install, and a row in settings that is always there.
- * Both buttons do the same thing.
+ * Both buttons do the same thing. The update downloads by itself, so the strip
+ * shows its progress before anyone asks.
  */
 function paintUpdate(u) {
   update = u;
-  const working = u.state === 'downloading' || u.state === 'installing';
-  const progress = u.state === 'downloading'
+  const installing = u.state === 'installing';
+  const downloading = u.state === 'downloading';
+  const shown = ['available', 'downloading', 'ready', 'installing'].includes(u.state);
+  const progress = downloading
     ? `Downloading ${u.version} \u00b7 ${u.percent}%`
     : 'Installing. Souffleur will reopen in a moment.';
+  const failed = Boolean(u.message) && !downloading && !installing;
 
-  $('update').hidden = !(u.state === 'available' || working);
-  $('updateText').textContent = working ? progress : u.message || `Version ${u.version} is available`;
-  $('updateText').classList.toggle('warn', !working && Boolean(u.message));
-  $('btnUpdate').disabled = working;
-  $('btnUpdate').textContent = u.message && !working ? 'Try again' : 'Update now';
+  $('update').hidden = !shown;
+  $('updateText').textContent = downloading || installing ? progress
+    : u.message || (u.state === 'ready' ? `Version ${u.version} is ready to install` : `Version ${u.version} is available`);
+  $('updateText').classList.toggle('warn', failed);
+  $('btnUpdate').disabled = installing;
+  $('btnUpdate').textContent = failed ? 'Try again' : u.state === 'ready' ? 'Restart to update' : 'Update now';
 
   $('versionText').textContent = `Souffleur ${u.current}`;
   const btn = $('btnVersion');
-  btn.disabled = working || u.state === 'checking';
+  btn.disabled = installing || u.state === 'checking';
   btn.textContent = u.state === 'checking' ? 'Checking\u2026'
-    : working || u.state === 'available' ? `Update now to ${u.version}`
+    : u.state === 'ready' ? `Restart to update to ${u.version}`
+    : shown ? `Update now to ${u.version}`
     : 'Check for updates';
 
   const note = $('versionNote');
-  note.className = u.message && !working ? 'note warn' : 'note';
-  note.textContent = working ? progress
+  note.className = failed ? 'note warn' : 'note';
+  note.textContent = downloading || installing ? progress
     : u.message ? u.message
     : u.state === 'current' ? 'You have the latest version.'
+    : u.state === 'ready' ? 'Installs it and reopens Souffleur. Otherwise it installs the next time you quit.'
     : u.state === 'available' ? 'Downloads the new version, installs it and reopens Souffleur.'
     : '';
-
-  maybePopUpdate();
-}
-
-/**
- * Ask once for each release found, so the strip above the chat is not the only
- * sign of it. Held back while listening: a card over the chat in the middle of
- * a call is the wrong moment. It shows when listening stops instead.
- */
-function maybePopUpdate() {
-  const pop = $('updatePop');
-  if (!update || update.state !== 'available' || update.message) {
-    pop.hidden = true;
-    return;
-  }
-  if (listening || poppedFor === update.version) return;
-
-  poppedFor = update.version;
-  $('updatePopTitle').textContent = `Souffleur ${update.version} is available`;
-  $('updatePopNote').textContent =
-    `You have ${update.current}. Update now downloads it, installs it and reopens Souffleur.`;
-  pop.hidden = false;
-  $('btnUpdatePop').focus();
 }
 
 function wireUpdate() {
   window.souffleur.onUpdate(paintUpdate);
   $('btnUpdate').onclick = () => window.souffleur.installUpdate();
-  $('btnUpdatePop').onclick = () => {
-    $('updatePop').hidden = true;
-    window.souffleur.installUpdate();
-  };
-  $('btnUpdateLater').onclick = () => { $('updatePop').hidden = true; };
-  $('btnVersion').onclick = () => (update && update.state === 'available'
+  $('btnVersion').onclick = () => (update && ['available', 'downloading', 'ready'].includes(update.state)
     ? window.souffleur.installUpdate()
     : window.souffleur.checkUpdate());
 }
@@ -746,7 +724,6 @@ function paintListening(on) {
   $('statusText').textContent = listening
     ? 'Listening to the call \u2014 hidden from screen share'
     : baseStatusText;
-  maybePopUpdate();
 }
 
 /** Answer the most recent thing that was said, without typing it out. */
@@ -802,9 +779,7 @@ function wireInput() {
 
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!$('updatePop').hidden) {
-      $('updatePop').hidden = true;     // same as Later
-    } else if (!$('settings').hidden) {
+    if (!$('settings').hidden) {
       $('settings').hidden = true;
       inputEl.focus();
     } else if (busy) {
@@ -877,7 +852,6 @@ window.souffleur.onClear(clearChat);
   const ls = await window.souffleur.listenState();
   for (const line of ls.lines || []) addHeard(line);   // {who, text}
   paintListening(ls.running);
-  // After listening is known, so a reload mid-call does not pop the update card.
   paintUpdate(b.update);
 
   // No key anywhere yet: open settings rather than failing on the first send.

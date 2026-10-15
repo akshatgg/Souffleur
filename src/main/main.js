@@ -214,12 +214,19 @@ function keyPresence() {
 
 /* --------------------------------- updates --------------------------------- */
 
-const UPDATE_EVERY = 6 * 60 * 60 * 1000;
+// The check reads a file from the newest release rather than calling GitHub's
+// API, so it is not held to the API's 60 calls an hour and can run hourly.
+const UPDATE_EVERY = 60 * 60 * 1000;
 
 // What the renderer paints. `state` is idle, checking, current, available,
-// downloading or installing; `message` is whatever went wrong last.
+// downloading, ready or installing; `message` is whatever went wrong last.
 let update = { state: 'idle', current: app.getVersion(), version: '', percent: 0, message: '' };
 let latest = null;         // the newer release the last check found, if any
+let ready = null;          // that release downloaded and checked: { version, mac } or { version, exe }
+let restartAfter = false;  // Update now was chosen: reopen once it is in
+let installStarted = false;
+let announced = '';        // the version the dialog was shown for, this launch
+let announceLater = false; // found while listening; ask once listening stops
 
 function setUpdate(patch) {
   update = { ...update, ...patch };
@@ -233,25 +240,62 @@ const updateDir = () => path.join(app.getPath('temp'), 'souffleur-update');
 
 const updateBusy = () => ['checking', 'downloading', 'installing'].includes(update.state);
 
+/** Why this copy has to be updated by hand, or '' when it can update itself. */
+function whyByHand() {
+  if (!latest) return '';
+  if (latest.limited) {
+    return 'GitHub is limiting downloads from your network right now, so Souffleur cannot verify the download itself.';
+  }
+  return updater.blocker({ packaged: app.isPackaged })
+    || (latest.asset ? '' : 'This release has no installer for this machine.');
+}
+
 /**
- * Look for a newer release. The timer calls this quietly: a laptop that is
- * offline at launch should not open onto an error about updates, so only a
- * check somebody asked for reports that it failed.
+ * Look for a newer release, and fetch it in the background when this copy can
+ * install it. The timer's checks are quiet and `auto`: a laptop offline at
+ * launch should not open onto an error, and only those checks show the dialog
+ * -- one somebody asked for already has the answer on screen.
  */
-async function checkForUpdate({ quiet = false } = {}) {
+async function checkForUpdate({ quiet = false, auto = false } = {}) {
   if (updateBusy()) return update;
   const before = update.state;
   setUpdate({ state: 'checking', message: '' });
   try {
     const found = await updater.check({ current: update.current });
     latest = found.newer ? found : null;
-    return setUpdate(latest
-      ? { state: 'available', version: found.version }
-      : { state: 'current', version: '' });
   } catch (err) {
     // A failed check does not un-find an update that was already found.
-    const state = latest ? 'available' : before === 'current' ? 'current' : 'idle';
+    const state = ready ? 'ready' : latest ? 'available' : before === 'current' ? 'current' : 'idle';
     return setUpdate({ state, message: quiet ? '' : err.message });
+  }
+  if (!latest) return setUpdate({ state: 'current', version: '' });
+
+  setUpdate({ state: ready?.version === latest.version ? 'ready' : 'available', version: latest.version });
+  if (auto) announceUpdate();
+  if (!whyByHand()) fetchUpdate();
+  return update;
+}
+
+/** Download and check the release, then get it ready to go in at quit. */
+async function fetchUpdate() {
+  if (updateBusy() || !latest || whyByHand() || ready?.version === latest.version) return;
+  const { version, asset } = latest;
+  try {
+    setUpdate({ state: 'downloading', version, percent: 0, message: '' });
+    const file = await updater.download(asset, updateDir(), {
+      onProgress: (p) => {
+        const percent = Math.floor(p * 100);
+        if (percent !== update.percent) setUpdate({ percent });
+      },
+    });
+    ready = process.platform === 'darwin'
+      ? { version, mac: await updater.stageMac({ dmg: file }) }
+      : { version, exe: file };
+    setUpdate({ state: 'ready', percent: 100 });
+    if (restartAfter) restartToUpdate();
+  } catch (err) {
+    restartAfter = false;
+    setUpdate({ state: 'available', message: err.message || String(err) });
   }
 }
 
@@ -261,39 +305,85 @@ function updateByHand(why) {
   return setUpdate({ state: 'available', message: `${why} The download page is open in your browser.` });
 }
 
-async function installUpdate() {
-  if (updateBusy()) return update;
+/** Update now: install and reopen, as soon as the download is in. */
+async function updateNow() {
+  if (update.state === 'installing') return update;
+  if (update.state === 'downloading') {
+    restartAfter = true;
+    return update;
+  }
   // Found through the release page while GitHub was limiting this network:
   // ask again for the checksum, which may be allowed by now.
   if (!latest || latest.limited) await checkForUpdate();
   if (!latest) return update;
-  if (latest.limited) {
-    return updateByHand('GitHub is limiting downloads from your network right now, so Souffleur cannot verify the download itself.');
-  }
-
-  const why = updater.blocker({ packaged: app.isPackaged });
+  const why = whyByHand();
   if (why) return updateByHand(why);
-  if (!latest.asset) return updateByHand('This release has no installer for this machine.');
 
+  restartAfter = true;
+  if (ready?.version === latest.version) return restartToUpdate();
+  fetchUpdate();      // restarts when it is ready
+  return update;
+}
+
+function restartToUpdate() {
+  setUpdate({ state: 'installing', message: '' });
+  // will-quit hands over to the installer, which reopens the app when done.
+  setTimeout(() => app.quit(), 300);
+  return update;
+}
+
+/**
+ * At quit, a downloaded update goes in: reopening Souffleur after Update now,
+ * or left closed after Later, ready for the next time it is opened.
+ */
+function installOnQuit() {
+  if (!ready || installStarted || ready.version !== latest?.version) return;
+  installStarted = true;
   try {
-    setUpdate({ state: 'downloading', percent: 0, message: '' });
-    const file = await updater.download(latest.asset, updateDir(), {
-      onProgress: (p) => {
-        const percent = Math.floor(p * 100);
-        if (percent !== update.percent) setUpdate({ percent });
-      },
-    });
-
-    setUpdate({ state: 'installing' });
-    if (process.platform === 'darwin') await updater.installMac({ dmg: file });
-    else updater.installWin({ exe: file });
-
-    // The installer takes over from here and reopens the app when it is done.
-    setTimeout(() => app.quit(), 400);
-    return update;
+    if (ready.mac) updater.swapMac({ ...ready.mac, relaunch: restartAfter });
+    else updater.installWin({ exe: ready.exe, relaunch: restartAfter });
   } catch (err) {
-    return setUpdate({ state: 'available', message: err.message || String(err) });
+    console.error('[souffleur] could not start the update:', err);
   }
+}
+
+/**
+ * The dialog, once per release per launch. A system dialog shows on a shared
+ * screen, so it waits while Souffleur is listening to a call and appears once
+ * listening stops.
+ */
+function announceUpdate() {
+  if (!latest || announced === latest.version) return;
+  if (listener?.running) {
+    announceLater = true;
+    return;
+  }
+  announced = latest.version;
+  showUpdateDialog().catch((err) => console.error('[souffleur] could not show the update dialog:', err));
+}
+
+async function showUpdateDialog() {
+  const { version } = latest;
+  const why = whyByHand();
+  const detail = why
+    ? `You have ${update.current}. Download the new version and install it over this one.`
+    : `You have ${update.current}. Update now to install it and open Souffleur again`
+      + `${update.state === 'ready' ? '' : ' once it has downloaded'}, or it will install the next time you quit Souffleur.`;
+
+  // Souffleur has no Dock icon, so it is never the active app on its own and
+  // the dialog would open behind whatever is.
+  app.focus({ steal: true });
+  const { response } = await dialog.showMessageBox({
+    type: 'info',
+    message: `Souffleur ${version} is available`,
+    detail,
+    buttons: why ? ['Download', 'Later'] : ['Update now', 'Later'],
+    defaultId: 0,
+    cancelId: 1,
+  });
+  if (response !== 0) return;
+  if (why) updateByHand(why);
+  else updateNow();
 }
 
 /* -------------------------------- listening -------------------------------- */
@@ -362,6 +452,12 @@ function ensureListener() {
   });
   listener.on('hint', toRenderer('listen:hint'));
   listener.on('state', toRenderer('listen:state'));
+  listener.on('state', (on) => {
+    if (!on && announceLater) {
+      announceLater = false;
+      announceUpdate();
+    }
+  });
   listener.on('speaking', toRenderer('listen:speaking'));
   listener.on('error', toRenderer('listen:error'));
   listener.on('log', (m) => console.log('[audiotap]', m));
@@ -574,7 +670,7 @@ ipcMain.handle('listen:last', () => {
 ipcMain.handle('window:close', () => { win?.hide(); });
 
 ipcMain.handle('update:check', () => checkForUpdate());
-ipcMain.handle('update:install', () => installUpdate());
+ipcMain.handle('update:install', () => updateNow());
 
 ipcMain.handle('chat:abort', () => {
   inFlight?.abort();
@@ -680,8 +776,8 @@ if (!app.requestSingleInstanceLock()) {
     registerShortcuts();
 
     fs.promises.rm(updateDir(), { recursive: true, force: true }).catch(() => {});
-    checkForUpdate({ quiet: true });
-    setInterval(() => checkForUpdate({ quiet: true }), UPDATE_EVERY).unref();
+    checkForUpdate({ quiet: true, auto: true });
+    setInterval(() => checkForUpdate({ quiet: true, auto: true }), UPDATE_EVERY).unref();
 
     if (process.env.SOUFFLEUR_DEBUG === '1') {
       const s = store.getSettings();
@@ -697,7 +793,9 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on('will-quit', () => {
     globalShortcut.unregisterAll();
-    listener?.stop();     // never leave the capture helper running
+    announceLater = false;   // stopping the listener below must not open the dialog
+    listener?.stop();        // never leave the capture helper running
+    installOnQuit();
   });
   // Overlay lives in the background; closing the window must not quit the app.
   app.on('window-all-closed', () => {});
