@@ -16,82 +16,16 @@ const os = require('os');
 const path = require('path');
 const readline = require('readline');
 const { imageBlock, abortError } = require('./claude');
+const { finder, childEnv, foldTurns } = require('./cli');
 
 // Aliases the CLI resolves to the newest model of each tier.
 const MODELS = ['opus', 'sonnet', 'haiku'];
-
-const WIN = process.platform === 'win32';
-const EXE = WIN ? 'claude.exe' : 'claude';
-const HOME = os.homedir();
 
 const NOT_FOUND =
   'Claude Code was not found on this computer. Install it from claude.com/claude-code, ' +
   'sign in once by running `claude` in a terminal, then press the refresh button in settings.';
 
-/**
- * Where installers put `claude`. An app opened from Finder gets launchd's bare
- * PATH, not the shell's, so the usual places are listed by hand.
- */
-function searchDirs() {
-  const nvm = path.join(HOME, '.nvm', 'versions', 'node');
-  let nvmBins = [];
-  try {
-    nvmBins = fs.readdirSync(nvm).sort().reverse().map((v) => path.join(nvm, v, 'bin'));
-  } catch { /* no nvm */ }
-
-  return [...new Set([
-    ...(process.env.PATH || '').split(path.delimiter),
-    path.join(HOME, '.local', 'bin'),       // native installer
-    path.join(HOME, '.claude', 'local'),    // older local install
-    '/opt/homebrew/bin',
-    '/usr/local/bin',
-    path.join(HOME, '.npm-global', 'bin'),
-    path.join(HOME, '.bun', 'bin'),
-    path.join(HOME, '.volta', 'bin'),
-    ...nvmBins,
-  ].filter(Boolean))];
-}
-
-function isExecutable(p) {
-  try {
-    fs.accessSync(p, fs.constants.X_OK);
-    return fs.statSync(p).isFile();
-  } catch {
-    return false;
-  }
-}
-
-/** Ask the user's login shell, for installs in a place not listed above. */
-function fromLoginShell() {
-  return new Promise((resolve) => {
-    const shell = process.env.SHELL || '/bin/zsh';
-    execFile(shell, ['-ilc', 'command -v claude'], { timeout: 4000 }, (_err, stdout) => {
-      const line = String(stdout || '').trim().split('\n').pop() || '';
-      resolve(path.isAbsolute(line) && isExecutable(line) ? line : null);
-    });
-  });
-}
-
-let found = null;   // path of the binary, once located
-
-/** Find the binary. `fresh` looks again, for after the user installs it. */
-async function locate({ fresh = false } = {}) {
-  if (found && !fresh) return found;
-  found = searchDirs().map((d) => path.join(d, EXE)).find(isExecutable) || null;
-  if (!found && !WIN) found = await fromLoginShell();
-  return found;
-}
-
-/** The binary's path as last located, without searching. */
-const located = () => found;
-
-/**
- * The CLI may be a node script (npm installs), so its own directory and the
- * usual ones go on PATH for it to find `node`.
- */
-function childEnv(bin) {
-  return { ...process.env, PATH: [path.dirname(bin), ...searchDirs()].join(path.delimiter) };
-}
+const { locate, located } = finder('claude');
 
 /**
  * Whether Claude Code is installed and signed in. Answers the model list, so
@@ -116,23 +50,9 @@ async function listClaudeCodeModels() {
   return MODELS;
 }
 
-/**
- * One user turn for the CLI. It answers a single prompt, so earlier turns are
- * folded into the text rather than sent as a history it could replay.
- */
+/** One user turn for the CLI, the screenshot in front of the question. */
 function userContent(messages, image) {
-  const turns = (messages || []).filter((m) => typeof m.content === 'string' && m.content.trim());
-  const last = turns.length && turns[turns.length - 1].role === 'user' ? turns.pop() : null;
-
-  let text = last ? last.content : '';
-  if (turns.length) {
-    const history = turns
-      .map((m) => `${m.role === 'assistant' ? 'Assistant' : 'User'}: ${m.content}`)
-      .join('\n\n');
-    text = `Earlier in this conversation:\n\n${history}\n\nNow reply to this:\n\n${text}`;
-  }
-  if (!text) text = 'What is on my screen?';
-
+  const text = foldTurns(messages);
   return image ? [imageBlock(image), { type: 'text', text }] : [{ type: 'text', text }];
 }
 

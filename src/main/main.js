@@ -13,7 +13,11 @@ const { Listener } = require('./listen');
 const persona = require('./persona');
 const store = require('./store');
 const claudeCode = require('./claudecode');
+const copilot = require('./copilot');
 const { captureScreen } = require('./capture');
+
+// Providers that answer through a CLI the user signed in to, by provider id.
+const CLIS = { 'claude-code': claudeCode, copilot };
 
 // Trying the free key locally (./dev_start.sh --free-key) runs as a brand-new
 // user: a profile of its own, with no saved key, so it shows what a first
@@ -184,10 +188,9 @@ function installId() {
  * On the free key the server picks the model, so none is sent.
  */
 function routeFor(s) {
-  // Claude Code signs in through its own CLI, so being installed is its key.
-  if (s.provider === 'claude-code' && claudeCode.located()) {
-    return { provider: 'claude-code', model: s.model };
-  }
+  // Claude Code and Copilot sign in through their own CLIs, so being installed
+  // is their key.
+  if (CLIS[s.provider]?.located()) return { provider: s.provider, model: s.model };
   const apiKey = store.getKey(s.provider);
   const route = freekey.pickRoute({ hasOwnKey: Boolean(apiKey), freeOn });
   if (route === 'own') return { provider: s.provider, apiKey, model: s.model, baseUrl: s.baseUrl };
@@ -203,9 +206,10 @@ function noteFreeStop(err) {
   if (err?.code === 'free_off') setFreeOn(false);
 }
 
-/** Saved keys, plus whether Claude Code is installed, which stands in for its key. */
+/** Saved keys, plus whether each CLI is installed, which stands in for its key. */
 function keyPresence() {
-  return { ...store.keyPresence(), 'claude-code': Boolean(claudeCode.located()) };
+  const installed = Object.entries(CLIS).map(([p, cli]) => [p, Boolean(cli.located())]);
+  return { ...store.keyPresence(), ...Object.fromEntries(installed) };
 }
 
 /* --------------------------------- updates --------------------------------- */
@@ -317,7 +321,10 @@ function transcribeRouteFor(s) {
     }
   }
   if (freeOn) return { provider: 'gemini', free: { installId: installId() } };
-  if (route) throw new Error('Claude cannot hear audio. Add a Gemini or OpenAI key in settings to listen to the call.');
+  if (route) {
+    const who = route.provider === 'copilot' ? 'GitHub Copilot' : 'Claude';
+    throw new Error(`${who} cannot hear audio. Add a Gemini or OpenAI key in settings to listen to the call.`);
+  }
   return null;
 }
 
@@ -395,7 +402,7 @@ ipcMain.handle('bootstrap', async () => {
   // key is on. Wait for the launch-time read of the switch, so a first launch
   // does not ask for a key it does not need.
   if (!Object.values(store.keyPresence()).some(Boolean)) await switchRead;
-  await claudeCode.locate();
+  await Promise.all(Object.values(CLIS).map((cli) => cli.locate()));
 
   return {
     settings: store.getSettings(),
@@ -587,13 +594,14 @@ ipcMain.handle('chat:send', async (event, { messages, withScreenshot }) => {
     await refreshSwitch();
     route = routeFor(s);
   }
-  if (!route && s.provider === 'claude-code') {
-    await claudeCode.locate({ fresh: true });
+  if (!route && CLIS[s.provider]) {
+    await CLIS[s.provider].locate({ fresh: true });
     route = routeFor(s);
   }
   if (!route) {
-    if (s.provider === 'claude-code') {
-      return { ok: false, error: 'Claude Code was not found on this computer. Install it from claude.com/claude-code, then try again.' };
+    if (CLIS[s.provider]) {
+      const { label, keyUrl } = PRESETS[s.provider];
+      return { ok: false, error: `${label} was not found on this computer. Install it from ${keyUrl.replace(/^https:\/\//, '')}, then try again.` };
     }
     return { ok: false, error: `No API key set for ${PRESETS[s.provider]?.label || s.provider}.` };
   }
@@ -667,7 +675,7 @@ if (!app.requestSingleInstanceLock()) {
     // page asks for it.
     freeOn = store.getSettings().freeKeyOn;
     refreshSwitch();
-    claudeCode.locate();
+    for (const cli of Object.values(CLIS)) cli.locate();
     createWindow();
     registerShortcuts();
 

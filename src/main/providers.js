@@ -9,6 +9,7 @@
  *              Ollama, LM Studio, vLLM, Azure ...)
  *   anthropic   -> Claude on the user's API key (claude.js)
  *   claude-code -> Claude through the user's signed-in Claude Code CLI (claudecode.js)
+ *   copilot     -> GitHub Copilot through the user's signed-in Copilot CLI (copilot.js)
  *
  * Every provider streams, and every one takes an optional screenshot.
  * A user's own key never leaves this machine except to the provider they
@@ -19,6 +20,7 @@
 const { FREE_URL } = require('./freekey');
 const { streamClaude, listClaudeModels, DEFAULT_MODEL: CLAUDE_DEFAULT } = require('./claude');
 const { streamClaudeCode, listClaudeCodeModels, MODELS: CLAUDE_CODE_MODELS } = require('./claudecode');
+const { streamCopilot, listCopilotModels, DEFAULT_MODEL: COPILOT_DEFAULT } = require('./copilot');
 
 // Set SOUFFLEUR_DEBUG=1 to log response shapes (never keys) to the Electron console.
 const DEBUG = process.env.SOUFFLEUR_DEBUG === '1';
@@ -61,6 +63,19 @@ const PRESETS = {
     vision: true,
     hears: false,
     noKey: true,
+    account: 'Claude',
+    signIn: 'claude',
+  },
+  copilot: {
+    label: 'GitHub Copilot',
+    defaultModel: COPILOT_DEFAULT,
+    models: [COPILOT_DEFAULT],
+    keyUrl: 'https://github.com/features/copilot/cli',
+    vision: true,
+    hears: false,
+    noKey: true,
+    account: 'GitHub',
+    signIn: 'copilot login',
   },
   custom: {
     label: 'OpenAI-compatible',
@@ -391,6 +406,7 @@ function defaultTranscribeModel(provider, available) {
  */
 async function listModels({ provider, apiKey, baseUrl, signal }) {
   if (provider === 'claude-code') return listClaudeCodeModels();
+  if (provider === 'copilot') return listCopilotModels();
   if (!apiKey) throw new Error('Set an API key first.');
   if (provider === 'anthropic') return listClaudeModels({ apiKey, signal });
 
@@ -459,6 +475,7 @@ function streamChat(opts) {
   if (provider === 'openai') return streamOpenAI(opts, 'OpenAI');
   if (provider === 'anthropic') return streamClaude(opts);
   if (provider === 'claude-code') return streamClaudeCode(opts);
+  if (provider === 'copilot') return streamCopilot(opts);
   if (provider === 'custom') {
     if (!opts.baseUrl) throw new Error('Custom provider needs a base URL.');
     return streamOpenAI(opts, 'Custom endpoint');

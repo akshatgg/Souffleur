@@ -199,20 +199,22 @@ function paintProvider() {
   const preset = presets[p] || {};
   paintModels(modelCache[p] || preset.models || []);
 
-  // Claude cannot take audio; say so where the key is chosen, not mid-call.
+  // Claude and Copilot cannot take audio; say so where the key is chosen, not mid-call.
   const deaf = preset.hears === false
-    ? ' Claude cannot hear audio, so listening to the call uses a Gemini or OpenAI key if you saved one, or the free key.'
+    ? ' ' + (p === 'copilot' ? 'GitHub Copilot' : 'Claude') + ' cannot hear audio, so listening to the call uses a ' +
+      'Gemini or OpenAI key if you saved one, or the free key.'
     : '';
 
   $('apiKey').hidden = Boolean(preset.noKey);
   $('keyLabel').textContent = preset.noKey ? preset.label : 'API key';
 
   if (preset.noKey) {
-    const install = ' <a href="' + esc(preset.keyUrl) + '" target="_blank" rel="noreferrer">Get Claude Code</a>';
+    const install = ' <a href="' + esc(preset.keyUrl) + '" target="_blank" rel="noreferrer">Get ' + esc(preset.label) + '</a>';
     $('keyNote').innerHTML = keyState[p]
-      ? 'Answers through Claude Code on this computer, signed in to your Claude account. No key needed.' + esc(deaf)
-      : 'Claude Code is not set up on this computer yet. Install it, run <code>claude</code> once in a terminal to sign in, ' +
-        'then press \u21bb next to Model.' + install;
+      ? 'Answers through ' + esc(preset.label) + ' on this computer, signed in to your ' + esc(preset.account) +
+        ' account. No key needed.' + esc(deaf)
+      : esc(preset.label) + ' is not set up on this computer yet. Install it, run <code>' + esc(preset.signIn) +
+        '</code> once in a terminal to sign in, then press \u21bb next to Model.' + install;
     $('keyNote').className = keyState[p] ? 'note' : 'note warn';
   } else {
     const link = preset.keyUrl
@@ -296,8 +298,9 @@ async function refreshModels() {
   note.textContent = 'Loading models\u2026';
 
   const res = await window.souffleur.listModels();
-  // For Claude Code, loading the list is the check that it is installed and
-  // signed in, so its result is also what the key row reports.
+  // For Claude Code and Copilot, loading the list is the check that the CLI is
+  // installed (and, for Claude Code, signed in), so its result is also what the
+  // key row reports.
   if (preset.noKey && Boolean(res.ok) !== Boolean(keyState[settings.provider])) {
     keyState[settings.provider] = Boolean(res.ok);
     paintProvider();
@@ -318,12 +321,12 @@ async function refreshModels() {
   } else {
     paintModels(res.models);
     note.textContent = preset.noKey
-      ? 'Claude Code is ready.'
+      ? label + ' is ready.'
       : res.models.length + ' models available to your key.';
   }
 }
 
-/** A key is saved, or the provider needs none (Claude Code checks itself). */
+/** A key is saved, or the provider needs none (a CLI checks itself). */
 function canList() {
   return Boolean(keyState[settings.provider] || (presets[settings.provider] || {}).noKey);
 }
@@ -879,9 +882,9 @@ window.souffleur.onClear(clearChat);
 
   // No key anywhere yet: open settings rather than failing on the first send.
   // With the free key on there is nothing to add, so go straight to the chat.
-  // Claude Code being installed counts only once it is the chosen provider.
+  // A CLI being installed counts only once it is the chosen provider.
   const ready = Object.entries(keyState)
-    .some(([p, on]) => on && (p !== 'claude-code' || settings.provider === p));
+    .some(([p, on]) => on && (!presets[p]?.noKey || settings.provider === p));
   if (!ready && !freeOn) {
     $('settings').hidden = false;
   } else {
