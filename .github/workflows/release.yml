@@ -80,6 +80,20 @@ jobs:
             exit 1
           fi
 
+      # Everyone downloads from akshatgg/souffleur-releases, and only
+      # PUBLISH_TOKEN can write there. Without it a release reached nobody --
+      # the in-app updater kept saying "latest" through 1.0.1 and 1.1.0 -- while
+      # the run still finished green. So stop here, before anything is built.
+      - name: Require the token that publishes the installers
+        if: steps.decide.outputs.publish == 'true'
+        env:
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+        run: |
+          if [ -z "${PUBLISH_TOKEN}" ]; then
+            echo "::error::PUBLISH_TOKEN is not set. Add a token with contents read and write on akshatgg/souffleur-releases and akshatgg/homebrew-tap as this repository's PUBLISH_TOKEN secret, then run the release again."
+            exit 1
+          fi
+
   macos:
     needs: [prepare]
     runs-on: macos-14
@@ -268,7 +282,7 @@ jobs:
       # It is another repository, which this run's own token cannot write to.
       # PUBLISH_TOKEN is a token that can: contents read and write on
       # akshatgg/souffleur-releases and akshatgg/homebrew-tap, nothing else.
-      # Without it this step says so and the release stays private-only.
+      # The prepare job refuses to start a release without it.
       - name: Publish the installers where anyone can download them
         id: public
         env:
@@ -276,9 +290,8 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${GH_TOKEN}" ]; then
-            echo "::warning::PUBLISH_TOKEN is not set, so this release was not published to akshatgg/souffleur-releases. Nobody can download it until it is."
-            echo "done=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            echo "::error::PUBLISH_TOKEN is not set, so this release was not published to akshatgg/souffleur-releases. Nobody can download it until it is."
+            exit 1
           fi
           v="${{ needs.prepare.outputs.version }}"
           repo="akshatgg/souffleur-releases"
