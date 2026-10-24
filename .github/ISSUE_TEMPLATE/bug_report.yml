@@ -1,0 +1,121 @@
+name: Bug report
+description: Something in Souffleur broke or doesn't behave as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Version, macOS version and provider matter more
+        than they look — most bugs here are one provider, one model, or one
+        capture path at a time.
+
+        **Security issues:** please don't file them here. Email akshatg9636@gmail.com.
+        Never paste an API key, even a revoked one.
+
+  - type: input
+    id: version
+    attributes:
+      label: Souffleur version
+      description: In the app menu, or the DMG filename you used.
+      placeholder: "1.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS — Apple Silicon
+        - macOS — Intel
+        - Windows x64
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS version
+      placeholder: "macOS 15.1 / Windows 11 23H2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      description: Which one is selected in settings when the bug happens?
+      options:
+        - Anthropic API key
+        - Claude Code CLI
+        - GitHub Copilot
+        - Free key (no key of my own)
+        - Not a provider issue
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: Shown in the model dropdown.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start a call, press the shortcut
+        2. Ask a question about the shared screen
+        3. Answer appears blank / stale / wrong provider
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Catching what's said (listening)
+        - Seeing the screen (capture)
+        - Answer quality or latency
+        - Invisibility to screen share
+        - Settings, shortcut or window
+        - Install or update
+        - Website, sign-in or free key
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: |
+        `npm run debug` from a source checkout prints the error path. Redact any
+        key before pasting.
+      render: shell
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot or recording
+      description: |
+        Drag a file in here. Please check nothing sensitive is visible in frame.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and this isn't a duplicate
+          required: true
+        - label: This is not a security issue, and I haven't pasted an API key
+          required: true
