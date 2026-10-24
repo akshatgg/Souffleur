@@ -1,0 +1,68 @@
+name: Feature request
+description: Suggest something Souffleur should do
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Souffleur is deliberately narrow: a prompter that follows the
+        conversation, works from the screen and the room, and stays out of a
+        screen share. Requests that deepen that are easier to take than ones
+        that widen it — not a no, just a heads-up before you write a proposal.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that Souffleur doesn't let you do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like
+      description: Describe the behaviour you want, not the implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds or alternatives
+      description: How do you handle this now? What do other tools do?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Catching what's said (listening)
+        - Seeing the screen (capture)
+        - Answer quality or latency
+        - Invisibility to screen share
+        - Settings, shortcut or window
+        - Provider support
+        - Website, sign-in or free key
+
+  - type: dropdown
+    id: providers
+    attributes:
+      label: Which providers should this work with?
+      multiple: true
+      options:
+        - Anthropic API key
+        - Claude Code CLI
+        - GitHub Copilot
+        - A new provider
+        - Doesn't matter
+
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you be willing to implement this?
+      options:
+        - "Yes, happy to open a PR"
+        - "Maybe, with some guidance"
+        - "No, just suggesting"

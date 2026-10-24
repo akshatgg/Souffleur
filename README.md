@@ -265,4 +265,7 @@ sign-up report.
 
 ## License
 
-MIT
+[MIT](LICENSE) © akshatgg
+
+Use it, modify it, redistribute it, sell it — provided the copyright notice and
+license text stay with the code.
